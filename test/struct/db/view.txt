@@ -1,0 +1,5 @@
+VIEW_ID,                    # PK
+
+USER_ID                     # FK (many2one, user)
+POST_ID                     # FK (many2one, post)
+liked                       # boolean

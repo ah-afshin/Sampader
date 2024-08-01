@@ -1,0 +1,21 @@
+USER_ID,                    # PK
+
+key,                        # "SECRET_KEY"
+username,                   # not to be duplicated
+password,                   # "HASHED_PASSWORD"
+password_salt,              #
+email,                      # not to be duplicated
+bio,                        # "PROFILE_DESCRIPTION"
+name,                       # "PROFILE_NAME"
+profile,                    # "PATH_TO_PROFILE_PICTURE"
+banner,                     # "PATH_TO_PROFILE_BANNER"
+date,                       # "CREATION_DATE"
+class,                      # "SCHOOL_AND_CLASS_OF_USER",
+verified,                   # "TYPE_OF_VERIFICATION",
+
+
+    followings      many2many
+    liked_posts     many2many
+    viewed_posts    many2many
+    posts           one2many
+    block           many2many

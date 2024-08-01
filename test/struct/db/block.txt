@@ -1,0 +1,4 @@
+BLOCK_ID,                   # PK
+
+blocker                     # FK (many2one, user)
+blocked                     # FK (many2one, user)
