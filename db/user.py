@@ -43,13 +43,6 @@ class User(const.Base):
     
     # checking for similar email or username
     def __username_available(self, username, email):
-        # query = select(User.username)
-        # usernames = const.session.execute(query).fetchall()
-        # query = select(User.email)
-        # emails = const.session.execute(query).fetchall()
-        # if (username,) not in usernames and (email,) not in emails:
-        #     return True
-        # return False
         try:
             exist = len(
                 const.session.query(User)
@@ -93,7 +86,7 @@ def new_user(username, email, name, bio, profile, banner, school_class, password
         const.session.add(user)
         const.session.commit()
         return True
-    
+
     # if failed to create user
     return False
 
@@ -140,8 +133,8 @@ def search_user(username):
 
 
 def get_user_by_username(username):
-    return const.session.query(User).filter(User.username == username).all()[0]
+    return const.session.query(User).filter(User.username == username).first()
 
 
 def get_user_by_userid(userid):
-    return const.session.query(User).filter(User.userID == userid).all()[0]
+    return const.session.query(User).filter(User.userID == userid).first()

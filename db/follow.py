@@ -42,7 +42,6 @@ def unfollow(follower, followed_user):
     #    remove a record from follows table
     if is_followed(follower, followed_user):
         query = delete(Follow).where(Follow.followedID == followed_user, Follow.followerID == follower)
-        # print(query)
         const.session.execute(query)
         const.session.commit()
         return True

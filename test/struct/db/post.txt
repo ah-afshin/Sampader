@@ -4,6 +4,7 @@ date,                       # "DATE_OF_POST"
 text,                       #
 category,                   # "CATEGORY_OF_POST" nullable
 contents,                   # "TYPE_PATH_TO_MEDIA" nullable
+like,                       # count of likes
 
 parent,                     # FK (post, many2one) nullable
 user,                       # FK (user, many2one)
