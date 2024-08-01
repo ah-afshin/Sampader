@@ -18,7 +18,7 @@ def is_blocked(blocker, blocked):
     try:
         exist = len(
             const.session.query(Block)
-                .filter((Block.blockedID == blocked) and (Block.blockerID == blocker))
+                .filter(Block.blockedID == blocked, Block.blockerID == blocker)
                 .all()
             ) > 0
         return exist
@@ -41,7 +41,7 @@ def unblock(blocker, blocked_user):
     # unblocking someone:
     #    remove a record from blocks table
     if is_blocked(blocker, blocked_user):
-        query = delete(Block).where((Block.blockedID == blocked_user) and (Block.blockerID == blocker))
+        query = delete(Block).where(Block.blockedID == blocked_user, Block.blockerID == blocker)
         const.session.execute(query)
         return True
     return False
