@@ -1,5 +1,5 @@
 from db import user
-# from db import block
+from db import block
 # from db import follow
 # from db import post
 # from db import view
