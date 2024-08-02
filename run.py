@@ -50,3 +50,13 @@ import db
 # )))
 
 # print(db.post.new_post("xxxx", "hello world"))
+
+
+# print(db.like.add_like("me", "somepost"))
+# print(db.like.is_liked("me", "somepost"))
+# print(db.like.add_like("me", "somepost"))
+print(db.like.remove_like("me", "somepost"))
+print(db.like.is_liked("me", "somepost"))
+print(db.like.add_like("me", "somepost"))
+print(db.like.get_user_likes("me"))
+print(db.like.get_post_likes("somepost"))

@@ -7,7 +7,6 @@ class Post(const.Base):
     __tablename__ = "posts"
 
     postID = Column("postID", String, primary_key=True, default=const.generate_uuid)
-    authorID = Column("authorID", String, ForeignKey("users.userID"))
     # when was it posted
     date = Column("date", String)
     text = Column("text", String)
@@ -16,14 +15,13 @@ class Post(const.Base):
     # if the post has any attachments like image, video, etc it would be stored here
     contents = Column("contents", String, nullable=True)
     # if the post is a comment on another post, it would have a parent id
+    authorID = Column("authorID", String, ForeignKey("users.userID"))
     parentID = Column("parentID", String, ForeignKey("posts.postID"), nullable=True)
-    # views = Column("views", Integer)
     likes = Column("views", Integer)
     def __init__(self, authorid, text, parentid=None, contents=None):
         self.authorID = authorid
         self.text = text
         self.date = datetime.datetime.now().strftime("%Y%m%d")
-        self.views = 0
         self.likes = 0
         if parentid:
             self.parentID = parentid
