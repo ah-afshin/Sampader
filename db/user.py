@@ -1,7 +1,12 @@
 from sqlalchemy import String, Integer, Column, select
 from werkzeug.security import generate_password_hash, check_password_hash
 import db.constants as const
+from db.follow import followers_table
+from db.like import LikesTable
+from db.block import blocks_table
+from sqlalchemy.orm import relationship, Mapped, mapped_column
 import os, datetime
+from typing import List
 
 
 class User(const.Base):
@@ -27,6 +32,34 @@ class User(const.Base):
     password = Column("password", String)
     password_salt = Column("salt", String)
 
+    # relations
+    posts = relationship(
+        "Post",
+        back_populates="author"
+    )
+    likes = relationship(
+        "Post",
+        secondary=LikesTable,
+        back_populates="likes"
+    )
+    followers = relationship(
+        'User',
+        secondary=followers_table,
+        primaryjoin=userID == followers_table.c.followed_id,
+        secondaryjoin=userID == followers_table.c.follower_id,
+        backref="followings"
+    )
+    blockers = relationship(
+        'User',
+        secondary=blocks_table,
+        primaryjoin=userID == blocks_table.c.blocked_id,
+        secondaryjoin=userID == blocks_table.c.blocker_id,
+        backref="blockings"
+    )
+
+    # blocking = relationship("Child", back_populates="parent")
+    # blocked = relationship("Child", back_populates="parent")
+
     # does profile exist
     def __profile_exists(self, profile):
         profile_path = const.uploads_path + "/profile"
@@ -43,15 +76,19 @@ class User(const.Base):
     
     # checking for similar email or username
     def __username_available(self, username, email):
-        try:
-            exist = len(
-                const.session.query(User)
-                    .filter(User.username == username or User.email == email)
-                    .all()
-                ) > 0
-            return not exist
-        except:
-            return True   
+        # try:
+        #     exist = len(
+        #         const.session.query(User)
+        #             .filter(User.username == username or User.email == email)
+        #             .all()
+        #         ) > 0
+        #     return not exist
+        # except:
+        #     return True
+        return not const.session.query(
+            const.session.query(User).filter_by(username=username, email=email).exists()
+        ).scalar()
+        
 
     def __init__(self, username, email, name, bio, profile, banner, school_class, password, password_salt):
         if (
@@ -138,3 +175,47 @@ def get_user_by_username(username):
 
 def get_user_by_userid(userid):
     return const.session.query(User).filter(User.userID == userid).first()
+
+def follow(follower, tobefollowed):
+    if not is_followed(follower, tobefollowed):
+        user_a = const.session.query(User).filter_by(userID=follower).first()
+        user_b = const.session.query(User).filter_by(userID=tobefollowed).first()
+        user_a.followings.append(user_b)
+        const.session.commit()
+        return True
+    return False
+
+def unfollow(follower, followed):
+    const.session.query(followers_table).filter_by(follower_id=follower, followed_id=followed).delete()
+    const.session.commit()
+
+def is_followed(follower, followed):
+    return const.session.query(
+        const.session.query(followers_table).filter_by(follower_id=follower, followed_id=followed).exists()
+    ).scalar()
+
+def followers(userid):
+    user = const.session.query(User).filter_by(userID=userid).first()
+    return user.followers
+
+def followings(userid):
+    user = const.session.query(User).filter_by(userID=userid).first()
+    return user.followings
+
+def block(blocker, tobeblocked):
+    if not is_blocked(blocker, tobeblocked):
+        user_a = const.session.query(User).filter_by(userID=blocker).first()
+        user_b = const.session.query(User).filter_by(userID=tobeblocked).first()
+        user_a.blockings.append(user_b)
+        const.session.commit()
+        return True
+    return False
+
+def unblock(blocker, blocked):
+    const.session.query(blocks_table).filter_by(blocker_id=blocker, blocked_id=blocked).delete()
+    const.session.commit()
+
+def is_blocked(blocker, blocked):
+    return const.session.query(
+        const.session.query(blocks_table).filter_by(blocker_id=blocker, blocked_id=blocked).exists()
+    ).scalar()
