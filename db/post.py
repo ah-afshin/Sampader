@@ -60,6 +60,7 @@ def new_post(author, text, parent=None, contents=None):
         const.session.commit()
         return True
     except:
+        const.session.rollback()
         return False
 
 
@@ -81,7 +82,7 @@ def get_last_posts(n):
 
 # needs update
 def get_comments(postid):
-    return const.session.query(Post).filter(Post.parentID == postid).order_by(Post.likes).all()
+    return const.session.query(Post).filter_by(parentID=postid).order_by(Post.likes).all()
 
 
 # needs update
@@ -96,16 +97,21 @@ def delete_post(id):
         const.session.commit()
         return True
     except:
+        const.session.rollback()
         return False
 
 def add_like(userid, postid):
     # to add a like
-    if not is_liked(userid, postid):
-        post = const.session.query(Post).filter(Post.postID == postid).first()
-        post.likes.append(get_user_by_userid(userid))
-        const.session.commit()
-        return True
-    return False
+    try:
+        if not is_liked(userid, postid):
+            post = const.session.query(Post).filter(Post.postID == postid).first()
+            post.likes.append(get_user_by_userid(userid))
+            const.session.commit()
+            return True
+        return False
+    except:
+        const.session.rollback()
+        return False
 
 def is_liked(userid, postid):
     # did this user liked this post?
@@ -115,11 +121,15 @@ def is_liked(userid, postid):
 
 def remove_like(user, post):
     # to remove someuser's like on a post
-    #    remove a record from likes table
-    if const.session.query(LikesTable).filter_by(postid=post, userid=user).delete():
-        const.session.commit()
-        return True
-    return False
+    try:
+        #    remove a record from likes table
+        if const.session.query(LikesTable).filter_by(postid=post, userid=user).delete():
+            const.session.commit()
+            return True
+        return False
+    except:
+        const.session.rollback()
+        return False
 
 # def get_user_likes(user):
 #     # list of user's liked posts

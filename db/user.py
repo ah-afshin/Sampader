@@ -1,4 +1,4 @@
-from sqlalchemy import String, Integer, Column, select
+from sqlalchemy import String, Integer, Column, select, update
 from werkzeug.security import generate_password_hash, check_password_hash
 import db.constants as const
 from db.follow import followers_table
@@ -7,6 +7,21 @@ from db.block import blocks_table
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 import os, datetime
 from typing import List
+
+
+# helpers
+# does profile exist
+def profile_exists(profile):
+    profile_path = const.uploads_path + "/profile"
+    if profile in os.listdir(profile_path):
+        return True
+    return False
+# does banner exist
+def banner_exists(banner):
+    banner_path = const.uploads_path + "/banner"
+    if banner in os.listdir(banner_path):
+        return True
+    return False
 
 
 class User(const.Base):
@@ -59,20 +74,6 @@ class User(const.Base):
 
     # blocking = relationship("Child", back_populates="parent")
     # blocked = relationship("Child", back_populates="parent")
-
-    # does profile exist
-    def __profile_exists(self, profile):
-        profile_path = const.uploads_path + "/profile"
-        if profile in os.listdir(profile_path):
-            return True
-        return False
-    
-    # does banner exist
-    def __banner_exists(self, banner):
-        banner_path = const.uploads_path + "/banner"
-        if banner in os.listdir(banner_path):
-            return True
-        return False
     
     # checking for similar email or username
     def __username_available(self, username, email):
@@ -89,12 +90,11 @@ class User(const.Base):
             const.session.query(User).filter_by(username=username, email=email).exists()
         ).scalar()
         
-
     def __init__(self, username, email, name, bio, profile, banner, school_class, password, password_salt):
         if (
             (school_class in const.school_and_class) and
-            self.__profile_exists(profile) and
-            self.__banner_exists(banner) and
+            profile_exists(profile) and
+            banner_exists(banner) and
             self.__username_available(username, email)
         ):
             self.username = username
@@ -110,6 +110,8 @@ class User(const.Base):
             self.verified = 0
 
 
+
+# basic events with user class
 def new_user(username, email, name, bio, profile, banner, school_class, password):
     # password should be hashed
     salt = os.urandom(16)  # Generate a random salt
@@ -127,7 +129,6 @@ def new_user(username, email, name, bio, profile, banner, school_class, password
     # if failed to create user
     return False
 
-
 def check_user(username, password):
     query = select(User.password, User.password_salt).where(User.username==username) # a query to get password and salt of user
     try:
@@ -135,9 +136,9 @@ def check_user(username, password):
         return check_password_hash(hashed_password, password + salt) # checking password if it fits the user
     except Exception as e:
         # if the user doesn't exist there would be an error.
+        const.session.rollback()
         return None
     
-
 def search_user(username):
     # getting usernames
     query = select(User.username)
@@ -168,21 +169,23 @@ def search_user(username):
     closest_matches = [item[0] for item in sorted_scores]
     return closest_matches
 
-
 def get_user_by_username(username):
     return const.session.query(User).filter(User.username == username).first()
-
 
 def get_user_by_userid(userid):
     return const.session.query(User).filter(User.userID == userid).first()
 
+
+
+# events related to follow
 def follow(follower, tobefollowed):
     if not is_followed(follower, tobefollowed):
         user_a = const.session.query(User).filter_by(userID=follower).first()
         user_b = const.session.query(User).filter_by(userID=tobefollowed).first()
-        user_a.followings.append(user_b)
-        const.session.commit()
-        return True
+        if user_a and user_b:
+            user_a.followings.append(user_b)
+            const.session.commit()
+            return True
     return False
 
 def unfollow(follower, followed):
@@ -202,13 +205,17 @@ def followings(userid):
     user = const.session.query(User).filter_by(userID=userid).first()
     return user.followings
 
+
+
+# events related to block
 def block(blocker, tobeblocked):
     if not is_blocked(blocker, tobeblocked):
         user_a = const.session.query(User).filter_by(userID=blocker).first()
         user_b = const.session.query(User).filter_by(userID=tobeblocked).first()
-        user_a.blockings.append(user_b)
-        const.session.commit()
-        return True
+        if user_b and user_a:
+            user_a.blockings.append(user_b)
+            const.session.commit()
+            return True
     return False
 
 def unblock(blocker, blocked):
@@ -219,3 +226,109 @@ def is_blocked(blocker, blocked):
     return const.session.query(
         const.session.query(blocks_table).filter_by(blocker_id=blocker, blocked_id=blocked).exists()
     ).scalar()
+
+
+
+# functions to update profile
+def update_name(userid, name):
+    stmt = (
+        update(User).
+        where(User.userID == userid).
+        values(name=name)
+    )
+    # Execute the update statement
+    result = const.session.execute(stmt)
+    # Commit the changes to the database
+    const.session.commit()
+    if result.rowcount > 0:
+        return True
+    return False
+
+def update_bio(userid, bio):
+    stmt = (
+        update(User).
+        where(User.userID == userid).
+        values(bio=bio)
+    )
+    # Execute the update statement
+    result = const.session.execute(stmt)
+    # Commit the changes to the database
+    const.session.commit()
+    if result.rowcount > 0:
+        return True
+    return False
+
+def update_profile(userid, profile):
+    if profile_exists(profile):
+        stmt = (
+            update(User).
+            where(User.userID == userid).
+            values(profile=profile)
+        )
+        # Execute the update statement
+        result = const.session.execute(stmt)
+        # Commit the changes to the database
+        const.session.commit()
+        if result.rowcount > 0:
+            return True
+    return False
+
+def update_banner(userid, banner):
+    if banner_exists(banner):
+        stmt = (
+            update(User).
+            where(User.userID == userid).
+            values(banner=banner)
+        )
+        # Execute the update statement
+        result = const.session.execute(stmt)
+        # Commit the changes to the database
+        const.session.commit()
+        if result.rowcount > 0:
+            return True
+    return False
+
+def update_class(userid, school_class):
+    stmt = (
+        update(User).
+        where(User.userID == userid).
+        values(school_and_class=school_class)
+    )
+    # Execute the update statement
+    result = const.session.execute(stmt)
+    # Commit the changes to the database
+    const.session.commit()
+    if result.rowcount > 0:
+        return True
+    return False
+
+def verify(userid, vtype):
+    stmt = (
+        update(User).
+        where(User.userID == userid).
+        values(verified=vtype)
+    )
+    # Execute the update statement
+    result = const.session.execute(stmt)
+    # Commit the changes to the database
+    const.session.commit()
+    if result.rowcount > 0:
+        return True
+    return False
+
+def update_password(userid, password):
+    # password should be hashed
+    salt = os.urandom(16)  # Generate a random salt
+    password = generate_password_hash(password + salt.hex()) # hashing the password
+    stmt = (
+        update(User).
+        where(User.userID == userid).
+        values(password=password, password_salt=salt.hex())
+    )
+    # Execute the update statement
+    result = const.session.execute(stmt)
+    # Commit the changes to the database
+    const.session.commit()
+    if result.rowcount > 0:
+        return True
+    return False
