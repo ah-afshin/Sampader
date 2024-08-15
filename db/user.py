@@ -1,12 +1,23 @@
-from sqlalchemy import String, Integer, Column, select, update
-from werkzeug.security import generate_password_hash, check_password_hash
-import db.constants as const
-from db.follow import followers_table
-from db.like import LikesTable
-from db.block import blocks_table
-from sqlalchemy.orm import relationship, Mapped, mapped_column
+from sqlalchemy import (
+    String,
+    Integer,
+    Column,
+    select,
+    update
+)
+from sqlalchemy.orm import relationship
+from werkzeug.security import (
+    generate_password_hash,
+    check_password_hash
+)
 import os, datetime
-from typing import List
+import db.constants as const
+from db.associations import (
+    followers_table,
+    LikesTable,
+    blocks_table
+)
+
 
 
 # helpers
@@ -29,8 +40,8 @@ class User(const.Base):
 
     # unique, not to be duplicated
     userID = Column("userID", String, primary_key=True, default=const.generate_uuid)
-    username = Column("username", String)
-    email = Column("email", String)
+    username = Column("username", String, unique=True)
+    email = Column("email", String, unique=True)
     
     # pubilc details
     name = Column("name", String)
@@ -72,24 +83,12 @@ class User(const.Base):
         backref="blockings"
     )
 
-    # blocking = relationship("Child", back_populates="parent")
-    # blocked = relationship("Child", back_populates="parent")
-    
-    # checking for similar email or username
     def __username_available(self, username, email):
-        # try:
-        #     exist = len(
-        #         const.session.query(User)
-        #             .filter(User.username == username or User.email == email)
-        #             .all()
-        #         ) > 0
-        #     return not exist
-        # except:
-        #     return True
+        # checking for similar email or username
         return not const.session.query(
             const.session.query(User).filter_by(username=username, email=email).exists()
         ).scalar()
-        
+
     def __init__(self, username, email, name, bio, profile, banner, school_class, password, password_salt):
         if (
             (school_class in const.school_and_class) and
@@ -108,6 +107,9 @@ class User(const.Base):
             self.password_salt = password_salt
             self.joined_date = datetime.datetime.now().strftime("%Y%m%d")
             self.verified = 0
+    
+    def __repr__(self):
+        return f"<user {self.username}, id: '{self.userID}'>"
 
 
 
@@ -115,8 +117,7 @@ class User(const.Base):
 def new_user(username, email, name, bio, profile, banner, school_class, password):
     # password should be hashed
     salt = os.urandom(16)  # Generate a random salt
-    password = generate_password_hash(password + salt.hex()) # hashing the password
-    
+    password = generate_password_hash(password + salt.hex()) # hashing the password    
     # creating user
     user = User(username, email, name, bio, profile, banner, school_class, password, salt.hex())
     if user.name is not None:
@@ -125,7 +126,6 @@ def new_user(username, email, name, bio, profile, banner, school_class, password
         const.session.add(user)
         const.session.commit()
         return True
-
     # if failed to create user
     return False
 
@@ -188,7 +188,7 @@ def follow(follower, tobefollowed):
             return True
     return False
 
-def unfollow(follower, followed):
+def unfollow(follower, followed): # this function won't return anything or yell any error
     const.session.query(followers_table).filter_by(follower_id=follower, followed_id=followed).delete()
     const.session.commit()
 
@@ -218,7 +218,7 @@ def block(blocker, tobeblocked):
             return True
     return False
 
-def unblock(blocker, blocked):
+def unblock(blocker, blocked): # this function won't return anything or yell any error
     const.session.query(blocks_table).filter_by(blocker_id=blocker, blocked_id=blocked).delete()
     const.session.commit()
 
@@ -331,4 +331,12 @@ def update_password(userid, password):
     const.session.commit()
     if result.rowcount > 0:
         return True
+    return False
+
+
+def get_user_likes(userid):
+    # list of posts which this user liked
+    user = const.session.query(User).filter_by(userID=userid).first()
+    if user:
+        return user.likes
     return False

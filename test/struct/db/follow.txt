@@ -1,4 +1,0 @@
-FOLLOW_ID,                  # PK
-
-follower                    # FK (many2one, user)
-followed                    # FK (many2one, user)

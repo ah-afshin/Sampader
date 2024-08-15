@@ -11,13 +11,11 @@ engine = create_engine(db_uri)
 Session = sessionmaker(bind=engine)
 session = Session()
 
+
 def generate_uuid():
     return str(uuid.uuid4())
 
-print("db constants configs were set")
 uploads_path = "F://Sampader/uploads"
-
-
 # lists of valid values
 school_and_class = ["101", "102", "103", "104", "201", "202", "203", "204", "301", "302", "303", "304",]
 verified = [
