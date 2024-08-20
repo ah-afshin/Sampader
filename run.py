@@ -1,5 +1,6 @@
 # import tests.db
 # import tests.services
+# import tests.JWToken
 
 from api import create_app
 from admin import admin_bp
