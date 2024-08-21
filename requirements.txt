@@ -11,6 +11,7 @@ jwt
 MarkupSafe==2.1.5
 PyJWT
 pytz
+Pillow
 six
 SQLAlchemy
 uuid
