@@ -76,6 +76,39 @@ def search_user(username):
     closest_matches = [item[0] for item in sorted_scores]
     return closest_matches
 
+
+def search_user_id(userID):
+    session = Session()
+    # getting userIDs
+    query = select(User.userID)
+    userIDs = session.execute(query).fetchall()
+    scores = {}
+    
+    # comparing each username with ours.
+    for i in userIDs:
+        # similarity score
+        count = 0
+        # which one is shorter?
+        min_len = min(len(userID), len(i[0]))
+        
+        for j in range(min_len):
+            # if they have the same character in the same index
+            count += 2 if userID[j] == i[0][j] else 0
+            # if they just have same characters
+            count += 1 if userID[j] in i[0] else 0
+        # count is the similarity score of this username
+        scores[i[0]] = count
+    
+    # choosing 3 top matches
+    sorted_scores = sorted(
+        scores.items(),
+        key=lambda x: x[1],
+        reverse=True
+    )[:3]
+    closest_matches = [item[0] for item in sorted_scores]
+    return closest_matches
+
+
 def get_user_by_username(username):
     session = Session()
     return session.query(User).filter(User.username == username).first()

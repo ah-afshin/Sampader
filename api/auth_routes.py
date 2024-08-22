@@ -4,8 +4,7 @@ import services as s
 
 
 auth_bp = Blueprint('auth_bp', __name__)
-SECRET_KEY = "smpd9561"
-
+from .constants import SECRET_KEY
 
 
 @auth_bp.route('/api/test_auth', methods=['GET'])
@@ -16,13 +15,15 @@ def test():
 
 @auth_bp.route('/api/signin', methods=["POST"])
 def signin():
-    username = request.json['username']
-    password = request.json['password']
-    done, userid = s.check_user(username, password)
-    if done:
-        token = s.new_token(userid, SECRET_KEY)
-        return {'token': token}, 200
-    return "Wrong password.", 401
+    username = request.json.get('USERNAME')
+    password = request.json.get('PASSWORD')
+    if username and password:
+        done, userid = s.check_user(username, password)
+        if done:
+            token = s.new_token(userid, SECRET_KEY)
+            return {'token': token}, 200
+        return "Wrong password.", 400
+    return "Username and password needed.", 400
 
 
 

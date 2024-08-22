@@ -1,0 +1,7 @@
+POST http://127.0.0.1:5000/api/unfollow
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImY3MTZlNDUxLWU5MjUtNGYzNC1iODJhLTQ1ZGQ0YjhiZmM3MyIsImV4IjoiMjAyNDA4MjMwNSJ9.o3Giwv2zfiMrBV_aBpK9e-ouA-WVed_wpgz0ti5VY0A
+
+{
+    "FOLLOW_ID": "f64a4a4a-b28f-4744-8f1e-9c183535f133"
+}

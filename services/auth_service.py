@@ -32,8 +32,11 @@ def new_token(userid:str, key:str):
 
 
 def token_validate(token:str, key:str):
-    now = datetime.now()
-    data = jwt.decode(token, key, algorithms=["HS256"])
-    if datetime.strptime(data["ex"], "%Y%m%d%H") > now:
-        return True, data["id"]
-    return False, "TOKEN_EXPIRED"
+    try:
+        now = datetime.now()
+        data = jwt.decode(token, key, algorithms=["HS256"])
+        if datetime.strptime(data["ex"], "%Y%m%d%H") > now:
+            return True, data["id"]
+        return False, "TOKEN_EXPIRED"
+    except:
+        return False, "INVALID_TOKEN"
