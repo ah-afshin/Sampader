@@ -1,10 +1,10 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, send_file
 from services import *
 from database import User
-
+from .post_routes import post_dto, comments_dto
 
 user_bp = Blueprint('user_bp', __name__)
-from .constants import SECRET_KEY
+from .constants import *
 
 
 def user_dto(userObj:User, userid:str):
@@ -14,17 +14,53 @@ def user_dto(userObj:User, userid:str):
         "email": userObj.email,
         "name": userObj.name,
         "bio": userObj.bio,
-        "profile": userObj.profile,
-        "banner": userObj.banner,
+        "profile": URL_PATH+"/profile/"+userObj.profile,
+        "banner": URL_PATH+"/banner/"+userObj.banner,
         "joined_date": userObj.joined_date,
         "verified": userObj.verified,
         "school_and_class": userObj.school_and_class,
-        "followers": [u.username for u in userObj.followers],
-        "followings": [u.username for u in userObj.followings],
-        "posts": [post.postID for post in userObj.posts],
+        "followers": len(userObj.followers),
+        "followings": len(userObj.followings),
+        # "block": [u.username for u in userObj.blockings], 
+        "posts": [post_dto(post) for post in get_users_posts(userObj.userID)],
+        "comment": [comments_dto(post) for post in get_users_comments(userObj.userID)],
+        "likes": [post_dto(post) for post in userObj.get_likes()],
         "isfollowed": str(is_followed(userid, userObj.userID)),
         "isfollowing": str(is_followed(userObj.userID, userid))
     }
+
+
+def user_dto2(userObj:User, userid:str):
+    return {
+        "id": userObj.userID,
+        "username": userObj.username,
+        "name": userObj.name,
+        "profile": URL_PATH+"/profile/"+userObj.profile,
+        "joined_date": userObj.joined_date,
+        "verified": userObj.verified,
+        "school_and_class": userObj.school_and_class,
+        "followers": len(userObj.followers),
+        "followings": len(userObj.followings),
+        "isfollowed": str(is_followed(userid, userObj.userID)),
+        "isfollowing": str(is_followed(userObj.userID, userid))
+    }
+
+
+@user_bp.route('/profile/<img>', methods=['GET'])
+def profile_image(img):
+    try:
+        return send_file(UPLOADS_PATH+"/profile/"+img)
+    except Exception as e:
+        return f"Error: {e}", 500
+
+
+@user_bp.route('/banner/<img>', methods=['GET'])
+def banner_image(img):
+    try:
+        return send_file(UPLOADS_PATH+"/banner/"+img)
+    except Exception as e:
+        return f"Error: {e}", 500
+
 
 
 @user_bp.route('/api/test_user', methods=['GET'])
@@ -60,16 +96,18 @@ def sign_up_api():
         return f"Failed to creat the user. err: {str(e)}", 400
     
 
-# name
+
 @user_bp.route('/api/search', methods=['POST'])
-def search_api():
+def search_api(): # and post
     term = request.json.get("SEARCH_TERM")
     if term:
-        return jsonify(search_user(term)), 200
+        return jsonify(
+            [user_dto2(get_user_by_username(i), "") for i in search_user(term)]
+        ), 200
     return "Search term is required.", 400
 
 
-# name
+
 @user_bp.route('/api/get_user', methods=['POST'])
 def get_single_user_api():
     token = request.headers.get('Authorization')
@@ -79,16 +117,16 @@ def get_single_user_api():
     if not done:
         return "Your token in expired.", 401
 
-    username = request.json.get("USERNAME")
+    username = request.json.get("ID")
     if username:
-        result = get_user_by_username(username)
+        result = get_user_by_userid(username)
         if result is None:
             return "User not found.", 404
         return jsonify(user_dto(result, userid)), 200
     return "Username is required.", 400
 
 
-# name (lower case)
+
 @user_bp.route('/api/get_users', methods=['POST'])
 def get_many_users_api():
     token = request.headers.get('Authorization')
@@ -98,18 +136,18 @@ def get_many_users_api():
     if not done:
         return "Your token in expired.", 401
 
-    lst = request.json.get("username_lst")
+    lst = request.json.get("USER_ID_LST")
     if lst:
         result = []
         for i in lst:
-            user = get_user_by_username(i)
+            user = get_user_by_userid(i)
             if user:
                 result.append(user_dto(user, userid))
         return jsonify(result), 200
     return "Username list is required.", 400
 
 
-# name
+
 @user_bp.route('/api/get_follow', methods=['POST'])
 def get_follow_api():
     token = request.headers.get('Authorization')
@@ -139,20 +177,20 @@ def follow_api():
     if not done:
         return "Your token in expired.", 401
     
-    # if is_followed(userid, request.json['FOLLOW_ID']):
-    #     unfollow(userid, request.json['FOLLOW_ID']):
-    #     return "User was successfully unfollowed.", 200
-    # if follow(userid, request.json['FOLLOW_ID']):
-    #     return "User was successfully followed.", 200
-    # return "Failed to follow user.", 400
-
-    if request.json.get('FOLLOW_ID') and follow(userid, request.json['FOLLOW_ID']):
+    if is_followed(userid, request.json['FOLLOW_ID']):
+        unfollow(userid, request.json['FOLLOW_ID'])
+        return "User was successfully unfollowed.", 200
+    if follow(userid, request.json['FOLLOW_ID']):
         return "User was successfully followed.", 200
     return "Failed to follow user.", 400
 
+    # if request.json.get('FOLLOW_ID') and follow(userid, request.json['FOLLOW_ID']):
+    #     return "User was successfully followed.", 200
+    # return "Failed to follow user.", 400
 
 
-@user_bp.route('/api/unfollow', methods=['POST'])
+
+# @user_bp.route('/api/unfollow', methods=['POST'])
 def unfollow_api(): ###
     token = request.headers.get('Authorization')
     if token is None:
@@ -191,21 +229,21 @@ def block_api():
     done, userid = token_validate(token.split()[1], SECRET_KEY)
     if not done:
         return "Your token in expired.", 401
-    
-    # if is_blocked(userid, request.json['BLOCK_ID']):
-    #     unblock(userid, request.json['BLOCK_ID']):
-    #     return "User was successfully unblocked.", 200
-    # if block(userid, request.json['BLOCK_ID']):
-    #     return "User was successfully blocked.", 200
-    # return "Failed to block user.", 400
-    
-    if request.json.get('BLOCK_ID') and block(userid, request.json['BLOCK_ID']):
+
+    if is_blocked(userid, request.json['BLOCK_ID']):
+        unblock(userid, request.json['BLOCK_ID'])
+        return "User was successfully unblocked.", 200
+    if block(userid, request.json['BLOCK_ID']):
         return "User was successfully blocked.", 200
     return "Failed to block user.", 400
+    
+    # if request.json.get('BLOCK_ID') and block(userid, request.json['BLOCK_ID']):
+    #     return "User was successfully blocked.", 200
+    # return "Failed to block user.", 400
 
 
 
-@user_bp.route('/api/unblock', methods=['POST'])
+# @user_bp.route('/api/unblock', methods=['POST'])
 def unblock_api(): ###
     token = request.headers.get('Authorization')
     if token is None:
@@ -231,7 +269,9 @@ def is_blocked_api():
         return "Your token in expired.", 401
     
     if request.json.get('BLOCK_ID'):
-        return str(is_blocked(userid, request.json['BLOCK_ID'])), 200
+        return str(
+            is_blocked(userid, request.json['BLOCK_ID'])
+        ), 200
     return "Follow ID is required.", 400
 
 

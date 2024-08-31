@@ -3,7 +3,8 @@ from database import shutdown_session
 
 
 def create_app():
-    app = Flask(__name__)
+    # app = Flask(__name__)
+    app = Flask("Sampader")
 
     # import APIs
     from .user_routes import user_bp

@@ -38,6 +38,11 @@ def get_users_posts(userid):
     return session.query(Post).filter(Post.authorID == userid, Post.parentID == None).all()
 
 
+def get_users_comments(userid):
+    session = Session()
+    return session.query(Post).filter(Post.authorID == userid, Post.parentID != None).all()
+
+
 def get_users_last_posts(userid, n):
     session = Session()
     return session.query(Post).filter(Post.authorID == userid, Post.parentID == None).order_by(Post.date.desc()).limit(n).all()

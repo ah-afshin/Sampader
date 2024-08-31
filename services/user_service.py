@@ -76,7 +76,6 @@ def search_user(username):
     closest_matches = [item[0] for item in sorted_scores]
     return closest_matches
 
-
 def search_user_id(userID):
     session = Session()
     # getting userIDs
@@ -107,7 +106,6 @@ def search_user_id(userID):
     )[:3]
     closest_matches = [item[0] for item in sorted_scores]
     return closest_matches
-
 
 def get_user_by_username(username):
     session = Session()
@@ -291,16 +289,6 @@ def update_password(userid, password):
     if result.rowcount > 0:
         return True
     return False
-
-
-def get_user_likes(userid):
-    session = Session()
-    # list of posts which this user liked
-    user = session.query(User).filter_by(userID=userid).first()
-    if user:
-        return user.likes
-    return False
-
 
 
 

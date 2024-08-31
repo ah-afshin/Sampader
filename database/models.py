@@ -7,7 +7,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import relationship
 import datetime
 import database.helpers as helpers ###
-from .constants import school_and_class
+from .constants import *
 from .base import Base
 from .associations import (
     followers_table,
@@ -18,37 +18,29 @@ from .associations import (
 
 
 
-# def username_available(self, username, email):
-#     session = Session()
-#     # checking for similar email or username
-#     return not session.query(
-#         session.query(User).filter_by(username=username, email=email).exists()
-#     ).scalar()
-
-
 
 class User(Base):
     __tablename__ = "users"
 
     # unique, not to be duplicated
-    userID = Column("userID", String, primary_key=True, default=helpers.generate_uuid)
-    username = Column("username", String, unique=True)
-    email = Column("email", String, unique=True)
+    userID = Column("userID", String(36), primary_key=True, default=helpers.generate_uuid)
+    username = Column("username", String(MAX_USERNAME_LEN), unique=True)
+    email = Column("email", String(MAX_EMAIL_LEN), unique=True)
     
     # pubilc details
-    name = Column("name", String)
-    bio = Column("bio", String)
-    profile = Column("profile", String)
-    banner = Column("banner", String)
+    name = Column("name", String(MAX_NAME_LEN))
+    bio = Column("bio", String(MAX_BIO_LEN))
+    profile = Column("profile", String(40))
+    banner = Column("banner", String(40))
 
     # profile details
-    joined_date = Column("date", String)
-    verified = Column("verified", Integer)
-    school_and_class = Column("class", String)
+    joined_date = Column("date", String(8))
+    verified = Column("verified", String(1))
+    school_and_class = Column("class", String)###
 
     # secret fields
-    password = Column("password", String)
-    password_salt = Column("salt", String)
+    password = Column("password", String(MAX_PASSWORD_LEN))
+    password_salt = Column("salt", String(32))
 
     # relations
     posts = relationship(
@@ -77,9 +69,9 @@ class User(Base):
 
     def __init__(self, username, email, name, bio, profile, banner, school_class, password, password_salt):
         if (
-            (school_class in school_and_class) and
-            helpers.profile_exists(profile) and
-            helpers.banner_exists(banner) #and
+            (school_class in school_and_class) #and
+            # helpers.profile_exists(profile) and
+            # helpers.banner_exists(banner) #and
             # helpers.username_available(username, email)
         ):
             self.username = username
@@ -97,28 +89,30 @@ class User(Base):
     def __repr__(self):
         return f"<user {self.username}, id: '{self.userID}'>"
 
+    def get_likes(self):
+        return self.likes[-5:]
 
 
 class Post(Base):
     __tablename__ = "posts"
 
-    postID = Column("postID", String, primary_key=True, default=helpers.generate_uuid)
-    date = Column("date", String) # when was it posted
-    text = Column("text", String, nullable=False)
+    postID = Column("postID", String(36), primary_key=True, default=helpers.generate_uuid)
+    date = Column("date", String(8)) # when was it posted
+    text = Column("text", String(MAX_POST_LEN), nullable=False)
     
     # post category is going to be set by AI later.
-    category = Column("category", String, nullable=True)
+    category = Column("category", String, nullable=True) #???
     # if the post has any attachments like image, video, etc it would be stored here
-    contents = Column("contents", String, nullable=True)
+    contents = Column("contents", String(40), nullable=True)
     
-    authorID = Column("authorID", String, ForeignKey("users.userID"), nullable=False)
+    authorID = Column("authorID", String(36), ForeignKey("users.userID"), nullable=False)
     author = relationship(
         "User",
         back_populates="posts"
     )
     
     # if the post is a comment on another post, it would have a parent id
-    parentID = Column("parentID", String, ForeignKey("posts.postID"), nullable=True)
+    parentID = Column("parentID", String(36), ForeignKey("posts.postID"), nullable=True)
     parent = relationship(
         "Post",
         remote_side=[postID]
@@ -136,8 +130,7 @@ class Post(Base):
         self.date = datetime.datetime.now().strftime("%Y%m%d")
         if parent:
             self.parent = parent
-        if contents and helpers.media_exists(contents):
-            self.contents = contents
+        self.contents = contents
     
     def __repr__(self):
         return f"<post '{self.text[:6]}' by {self.author.username}>"
