@@ -90,7 +90,7 @@ def sign_up_api():
             request.json["PASSWORD"]
         )
         if done:
-            return "User was successfully created.", 200
+            return "User was successfully created.", 201
         return "Failed to creat the user.", 400
     except Exception as e:
         return f"Failed to creat the user. err: {str(e)}", 400
@@ -117,13 +117,13 @@ def get_single_user_api():
     if not done:
         return "Your token in expired.", 401
 
-    username = request.json.get("ID")
-    if username:
-        result = get_user_by_userid(username)
+    userid = request.json.get("ID")
+    if userid:
+        result = get_user_by_userid(userid)
         if result is None:
             return "User not found.", 404
         return jsonify(user_dto(result, userid)), 200
-    return "Username is required.", 400
+    return "User ID is required.", 400
 
 
 
@@ -144,7 +144,7 @@ def get_many_users_api():
             if user:
                 result.append(user_dto(user, userid))
         return jsonify(result), 200
-    return "Username list is required.", 400
+    return "User ID list is required.", 400
 
 
 
@@ -177,10 +177,14 @@ def follow_api():
     if not done:
         return "Your token in expired.", 401
     
-    if is_followed(userid, request.json['FOLLOW_ID']):
-        unfollow(userid, request.json['FOLLOW_ID'])
+    followid = request.json['FOLLOW_ID']
+    if followid is None:
+        return "Follow ID is required.", 400
+
+    if is_followed(userid, followid):
+        unfollow(userid, followid)
         return "User was successfully unfollowed.", 200
-    if follow(userid, request.json['FOLLOW_ID']):
+    if follow(userid, followid):
         return "User was successfully followed.", 200
     return "Failed to follow user.", 400
 

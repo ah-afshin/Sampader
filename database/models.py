@@ -84,7 +84,7 @@ class User(Base):
             self.password = password
             self.password_salt = password_salt
             self.joined_date = datetime.datetime.now().strftime("%Y%m%d")
-            self.verified = 0
+            self.verified = "f"
     
     def __repr__(self):
         return f"<user {self.username}, id: '{self.userID}'>"

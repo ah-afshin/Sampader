@@ -16,10 +16,6 @@ from database.constants import (
     verified,
     school_and_class
 )
-from database.helpers import (
-    profile_exists,
-    banner_exists
-)
 
 
 
@@ -210,34 +206,32 @@ def update_bio(userid, bio):
 
 def update_profile(userid, profile):
     session = Session()
-    if profile_exists(profile):
-        stmt = (
-            update(User).
-            where(User.userID == userid).
-            values(profile=profile)
-        )
-        # Execute the update statement
-        result = session.execute(stmt)
-        # Commit the changes to the database
-        session.commit()
-        if result.rowcount > 0:
-            return True
+    stmt = (
+        update(User).
+        where(User.userID == userid).
+        values(profile=profile)
+    )
+    # Execute the update statement
+    result = session.execute(stmt)
+    # Commit the changes to the database
+    session.commit()
+    if result.rowcount > 0:
+        return True
     return False
 
 def update_banner(userid, banner):
     session = Session()
-    if banner_exists(banner):
-        stmt = (
-            update(User).
-            where(User.userID == userid).
-            values(banner=banner)
-        )
-        # Execute the update statement
-        result = session.execute(stmt)
-        # Commit the changes to the database
-        session.commit()
-        if result.rowcount > 0:
-            return True
+    stmt = (
+        update(User).
+        where(User.userID == userid).
+        values(banner=banner)
+    )
+    # Execute the update statement
+    result = session.execute(stmt)
+    # Commit the changes to the database
+    session.commit()
+    if result.rowcount > 0:
+        return True
     return False
 
 def update_class(userid, school_class):
