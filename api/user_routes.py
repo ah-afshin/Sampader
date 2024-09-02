@@ -3,6 +3,7 @@ from services import *
 from database import User
 from .post_routes import post_dto, comments_dto
 
+
 user_bp = Blueprint('user_bp', __name__)
 from .constants import *
 
@@ -238,6 +239,7 @@ def block_api():
         unblock(userid, request.json['BLOCK_ID'])
         return "User was successfully unblocked.", 200
     if block(userid, request.json['BLOCK_ID']):
+        unfollow(userid, request.json['BLOCK_ID'])
         return "User was successfully blocked.", 200
     return "Failed to block user.", 400
     

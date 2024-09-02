@@ -8,6 +8,7 @@ from werkzeug.security import (
 import os
 from database import (
     User,
+    UserStatus,
     followers_table,
     blocks_table,
     Session,
@@ -32,6 +33,7 @@ def new_user(username, email, name, bio, profile, banner, school_class, password
         if user.name is not None:
 
             # if user was created succesfully
+            user.status = UserStatus(user.userID)
             session.add(user)
             session.commit()
             return True

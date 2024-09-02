@@ -1,6 +1,5 @@
 from sqlalchemy import (
     String,
-    Integer,
     Column,
     ForeignKey
 )
@@ -66,6 +65,11 @@ class User(Base):
         secondaryjoin=userID == blocks_table.c.blocker_id,
         backref="blockings"
     )
+    status = relationship(
+        "UserStatus",
+        back_populates="user",
+        uselist=False
+    )
 
     def __init__(self, username, email, name, bio, profile, banner, school_class, password, password_salt):
         if (
@@ -89,15 +93,15 @@ class User(Base):
     def __repr__(self):
         return f"<user {self.username}, id: '{self.userID}'>"
 
-    def get_likes(self):
-        return self.likes[-5:]
+    def get_likes(self, n=5):
+        return self.likes[-n:]
 
 
 class Post(Base):
     __tablename__ = "posts"
 
     postID = Column("postID", String(36), primary_key=True, default=helpers.generate_uuid)
-    date = Column("date", String(8)) # when was it posted
+    date = Column("date", String(12)) # when was it posted
     text = Column("text", String(MAX_POST_LEN), nullable=False)
     
     # post category is going to be set by AI later.
@@ -127,10 +131,27 @@ class Post(Base):
     def __init__(self, author, text, parent=None, contents=None):
         self.author = author
         self.text = text
-        self.date = datetime.datetime.now().strftime("%Y%m%d")
+        self.date = datetime.datetime.now().strftime("%Y%m%d%H%M")
         if parent:
             self.parent = parent
         self.contents = contents
     
     def __repr__(self):
         return f"<post '{self.text[:6]}' by {self.author.username}>"
+
+
+class UserStatus(Base):
+    __tablename__ = "user_status"
+    ID = Column("ID", String(36), ForeignKey("users.userID"), primary_key=True)
+    # categories = Column("categories", String) ###
+    lastseen = Column("lastseen", String(12))
+    notifications = Column("notifs", String)
+    user = relationship(
+        "User",
+        back_populates="status"
+    )
+
+    def __init__(self, userid):
+        self.ID = userid
+        self.lastseen = datetime.datetime.now().strftime("%Y%m%d%H%M")
+        self.notifications = ""

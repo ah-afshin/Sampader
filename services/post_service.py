@@ -22,10 +22,10 @@ def new_post(authorID, text, parentID=None, contents=None):
         p = Post(author, text, parent, contents)
         session.add(p)
         session.commit()
-        return True
+        return True, p.postID
     except:
         session.rollback()
-        return False
+        return False, ""
 
 
 def get_post(postid):
@@ -41,6 +41,11 @@ def get_users_posts(userid):
 def get_users_comments(userid):
     session = Session()
     return session.query(Post).filter(Post.authorID == userid, Post.parentID != None).all()
+
+
+def get_users_last_comments(userid, n):
+    session = Session()
+    return session.query(Post).filter(Post.authorID == userid, Post.parentID != None).order_by(Post.date.desc()).limit(n).all()
 
 
 def get_users_last_posts(userid, n):

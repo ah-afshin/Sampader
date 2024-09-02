@@ -1,6 +1,8 @@
 from flask import Blueprint, request, jsonify, send_file
 from database import Post
 from services import *
+import threading
+
 
 post_bp = Blueprint('post_bp', __name__)
 from .constants import *
@@ -82,7 +84,10 @@ def create_post_api():
     
     parentid = None if request.json.get("POST_PARENT")=="0" else request.json.get("POST_PARENT")
     content = None if request.json.get("POST_CONTENT")==[] else request.json.get("POST_CONTENT")[0]
-    if new_post(userid, text, parentid, content):
+    done, postid = new_post(userid, text, parentid, content)
+    if done:
+        thread = threading.Thread(target=handle_post_category, kwargs={"postId": postid})
+        thread.start()
         return "Post was successfully created.", 201
     return "Failed to create the post.", 400
 
