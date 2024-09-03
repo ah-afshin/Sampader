@@ -86,7 +86,7 @@ def create_post_api():
     content = None if request.json.get("POST_CONTENT")==[] else request.json.get("POST_CONTENT")[0]
     done, postid = new_post(userid, text, parentid, content)
     if done:
-        thread = threading.Thread(target=handle_post_category, kwargs={"postId": postid})
+        thread = threading.Thread(target=handle_post_category, kwargs={"postid": postid})
         thread.start()
         return "Post was successfully created.", 201
     return "Failed to create the post.", 400

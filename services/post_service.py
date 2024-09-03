@@ -1,4 +1,5 @@
 from sqlalchemy import (
+    select,
     delete,
     or_,
     func
@@ -135,3 +136,36 @@ def get_post_likes(post):
     if post:
         return post.likes
     return False
+
+def search_post(txt):
+    session = Session()
+    # getting post text
+    query = select(Post.text, Post.postID)
+    texts = session.execute(query).fetchall()
+    scores = {}
+    
+    # comparing each text with ours.
+    for i in texts:
+        # similarity score
+        count = 0
+        # which one is shorter?
+        min_len = min(len(txt), len(i[0]))
+        
+        for j in range(min_len):
+            # if they have the same character in the same index
+            count += 2 if txt[j] == i[0][j] else 0
+            # if they just have same characters
+            count += 1 if txt[j] in i[0] else 0
+        # count is the similarity score of this username
+        scores[i[1]] = count
+    
+    # choosing 3 top matches
+    print("xxx" , scores)
+    sorted_scores = sorted(
+        scores.items(),
+        key=lambda x: x[1],
+        reverse=True
+    )[:5]
+    closest_matches = [item[0] for item in sorted_scores]
+    # closest_matches = sorted_scores
+    return closest_matches

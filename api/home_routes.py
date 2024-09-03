@@ -24,5 +24,6 @@ def homepage_api():
     user = get_user_by_userid(userid)
     if user:
         posts = homepage_feed(user)
+        seen(user)
         return jsonify([post_dto(p) for p in posts]), 200
     return "User not found (Invalid token)"

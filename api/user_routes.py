@@ -102,9 +102,11 @@ def sign_up_api():
 def search_api(): # and post
     term = request.json.get("SEARCH_TERM")
     if term:
-        return jsonify(
-            [user_dto2(get_user_by_username(i), "") for i in search_user(term)]
-        ), 200
+        print(search_post(term))
+        return jsonify({
+            "matched_user_ids": [user_dto2(get_user_by_username(i), "") for i in search_user(term)],
+            "matched_post_ids": [post_dto(get_post(i)) for i in search_post(term)]
+        }), 200
     return "Search term is required.", 400
 
 

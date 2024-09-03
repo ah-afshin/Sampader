@@ -2,6 +2,7 @@
 # import tests.services
 # import tests.JWToken
 # import tests.image_service
+# import tests.post_creator
 
 from api import create_app
 from admin import admin_bp

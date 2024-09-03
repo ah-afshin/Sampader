@@ -1,15 +1,16 @@
 from sqlalchemy import (
+    update,
     exists,
-    and_,
     not_
 )
 from sqlalchemy.orm import (
     aliased
 )
-import datetime, math, random
+import datetime, math, random, requests
 from database import (
     User,
     Post,
+    UserStatus,
     Session,
     followers_table,
     blocks_table
@@ -22,7 +23,19 @@ from .post_service import (
 
 
 def seen(user:User):
-    user.status.lastseen = datetime.datetime.now().strftime("%Y%m%d%H%M")
+    session = Session()
+    stmt = (
+        update(UserStatus).
+        where(UserStatus.ID == user.userID).
+        values(lastseen=datetime.datetime.now().strftime("%Y%m%d%H%M"))
+    )
+    # Execute the update statement
+    result = session.execute(stmt)
+    # Commit the changes to the database
+    session.commit()
+    if result.rowcount > 0:
+        return True
+    return False
 
 
 def following_posts(user:User):
@@ -32,25 +45,10 @@ def following_posts(user:User):
 
     # # Alias for the User table to distinguish between followers and followees
     # FollowedUser = aliased(User)
-
-    # # Query to get all posts by followed users after the specified datetime
-    # posts = (
-    #     session.query(Post)
-    #     .join(followers_table, followers_table.c.followed_id == Post.authorID)
-    #     .join(FollowedUser, FollowedUser.userID == followers_table.c.followed_id)
-    #     .filter(
-    #         and_(
-    #             followers_table.c.follower_id == user.userID,  # Only include followed users
-    #             Post.date > lastseen                   # Only include posts after the specified datetime
-    #         )
-    #     )
-    #     .order_by(Post.date.desc())  # Optional: to order posts by ascending date
-    #     .all()
-    # )
-
     posts = (
         session.query(Post)
         .join(followers_table, followers_table.c.followed_id == Post.authorID)
+        # .join(FollowedUser, FollowedUser.userID == followers_table.c.followed_id)
         .filter(
             followers_table.c.follower_id == user.userID,  # Only include followed users
             Post.date > lastseen,  # Only include posts after the specified datetime
@@ -84,23 +82,10 @@ def get_interests(user:User):
     
 
 def calculate_recency_score(event_time, current_time, decay_factor=0.05):
-    """
-    Calculate a recency score for an event based on its timestamp.
-    
-    :param event_time: The timestamp of the event (in seconds since epoch).
-    :param current_time: The current timestamp (in seconds since epoch). Defaults to the current time.
-    :param decay_factor: The decay factor that controls how quickly the score decreases. Higher values mean faster decay.
-    :return: A recency score, with higher values indicating more recent events.
-    """
-    # if current_time is None:
-    #     current_time = datetime.datetime.now()  # Get current time in seconds since epoch
     event_time = datetime.datetime.strptime(event_time, "%Y%m%d%H%M")
     # Calculate the time difference in seconds
     time_diff = current_time - event_time
     time_diff = time_diff.total_seconds()
-    # Ensure time difference is not negative
-    if time_diff < 0:
-        time_diff = 0
     # Calculate the recency score using an exponential decay function
     recency_score = math.exp(-decay_factor * time_diff)    
     return 5*recency_score
@@ -125,31 +110,34 @@ def prefered_posts(user:User, n=25):
                 (blocks_table.c.blocker_id == user.userID)  # by the authenticated user
             )
         ),
+        Post.authorID != user.userID,
         Post.parent == None
     ).all()
     
+    random.shuffle(recent_posts)
     # calculate preference score
     for post in recent_posts:
-        score = intrests[post.category] + calculate_recency_score(post.date, current_time=now) + (len(post.likes)*0.1)
-        result.append((score, post))
+        if post.category:
+            score = intrests[post.category] + calculate_recency_score(post.date, current_time=now) + (len(post.likes)*0.1)
+            result.append((score, post))
+        else:
+            score = calculate_recency_score(post.date, current_time=now) + (len(post.likes)*0.1)
+            result.append((score, post))
     # sort and choose n posts by preference score
     sorted_pairs = sorted(result, key=lambda pair: pair[0], reverse=True)
-    print(sorted_pairs)
+    # print(sorted_pairs)
     return [p[1] for p in sorted_pairs[-n:]]
 
 
 def mix_lists_preserving_order(list1, list2):
     # Create a combined list of elements, each associated with a list identifier
     combined = [(1, elem) for elem in list1] + [(2, elem) for elem in list2]
-
     # Shuffle the combined list to mix elements from both lists
     random.shuffle(combined)
-
     # Create an output list, ensuring the order within each list is preserved
     result = []
     for _, elem in sorted(combined, key=lambda x: (x[0], list1.index(x[1]) if x[0] == 1 else list2.index(x[1]))):
         result.append(elem)
-    
     return result
 
 
@@ -165,7 +153,15 @@ def handle_post_category(postid):
         p = get_post(postid)
         if p:
             # some logic
-            c = "test"
+            try:
+                req = requests.post(
+                    "https://palmix.pythonanywhere.com/sampader-category-gemini",
+                    json={"input": p.text},
+                )
+                c = req.text
+            except Exception as e:
+                print(f"Category Handle Error: {str(e)}")
+                c = "test"
             # Update category
             p.category = c
             session.commit()

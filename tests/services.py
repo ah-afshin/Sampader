@@ -79,3 +79,4 @@ print(s.new_post(aha.userID, "this content does not exist", contents="bullshit")
 
 print()
 print(s.delete_post(p.postID))
+print(s.new_user("iigames", "ilia@email.com", "ilia", "developer", "e7987a8a-8ec6-4590-9286-789189df707f.jpg", "6b038d98-9a53-498b-8bea-85be009b7baf.jpg", "202", "passw"))
