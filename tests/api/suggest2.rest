@@ -1,0 +1,2 @@
+GET http://127.0.0.1:5000/api/recommended-people
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImY3MTZlNDUxLWU5MjUtNGYzNC1iODJhLTQ1ZGQ0YjhiZmM3MyIsImV4IjoiMjAyNDA4MjMwNSJ9.o3Giwv2zfiMrBV_aBpK9e-ouA-WVed_wpgz0ti5VY0A

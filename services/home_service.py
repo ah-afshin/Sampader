@@ -1,7 +1,8 @@
 from sqlalchemy import (
     update,
     exists,
-    not_
+    not_,
+    func
 )
 from sqlalchemy.orm import (
     aliased
@@ -167,3 +168,53 @@ def handle_post_category(postid):
             session.commit()
     except:
         session.rollback()
+
+
+def get_followed_by_followings(user_id, limit=5):
+    session = Session()
+    # Alias for the User table to distinguish between the user and the followed users
+    Follower = aliased(User)
+    FollowedByFollowings = aliased(User)
+
+    # Query to find users that are followed by the user's followings
+    followed_by_followings = (
+        session.query(FollowedByFollowings, func.count(FollowedByFollowings.userID).label('count'))
+        .join(followers_table, FollowedByFollowings.userID == followers_table.c.followed_id)
+        .join(Follower, Follower.userID == followers_table.c.follower_id)
+        .filter(followers_table.c.follower_id.in_(
+            # Subquery to find the people the user is following
+            session.query(followers_table.c.followed_id)
+            .filter(followers_table.c.follower_id == user_id)
+        ))
+        .filter(FollowedByFollowings.userID != user_id)  # Exclude the user themselves from the results
+        .filter(not_(
+            exists().where(
+                (blocks_table.c.blocked_id == FollowedByFollowings.userID) &  # The followed user
+                (blocks_table.c.blocker_id == user_id)  # is blocked by the current user
+            )
+        ))
+        .group_by(FollowedByFollowings.userID)
+        .order_by(func.count(FollowedByFollowings.userID).desc())  # Sort by the most followed
+        .limit(limit)
+        .all()
+    )
+    return [i[0] for i in followed_by_followings]
+
+
+def get_most_followed_users(limit=5):
+    session = Session()
+    # Query to get users with the most followers
+    most_followed_users = (
+        session.query(User, func.count(followers_table.c.follower_id).label('follower_count'))
+        .join(followers_table, User.userID == followers_table.c.followed_id)
+        .group_by(User.userID)
+        .order_by(func.count(followers_table.c.follower_id).desc())  # Order by follower count in descending order
+        .limit(limit)  # Limit to the top 'n' users
+        .all()
+    )
+    return [i[0] for i in most_followed_users]
+
+def suggest_people(userid):
+    res = get_most_followed_users()
+    res = res + get_followed_by_followings(userid)
+    return res

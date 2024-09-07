@@ -50,6 +50,7 @@ def notifnum_api():
         return "Your token in expired.", 401
     return str(get_notification_number(userid)), 200
 
+
 @home_bp.route('/api/notifications', methods=["POST", "GET"])
 def notif_api():
     token = request.headers.get('Authorization')
@@ -59,3 +60,14 @@ def notif_api():
     if not done:
         return "Your token in expired.", 401
     return [notif_dto(i, userid) for i in get_notifications(userid)]
+
+
+@home_bp.route('/api/recommended-people', methods=["POST", "GET"])
+def recommended_people_api():
+    token = request.headers.get('Authorization')
+    if token is None:
+        return "Missing Authorization Header (JWT)", 401
+    done, userid = token_validate(token.split()[1], SECRET_KEY)
+    if not done:
+        return "Your token in expired.", 401
+    return [user_dto2(i, userid) for i in suggest_people(userid)], 200
