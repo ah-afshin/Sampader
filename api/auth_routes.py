@@ -2,14 +2,8 @@ from flask import Blueprint, request, jsonify
 import services as s
 
 
-
 auth_bp = Blueprint('auth_bp', __name__)
 from .constants import SECRET_KEY
-
-
-@auth_bp.route('/api/test_auth', methods=['GET'])
-def test():
-    return jsonify({"testing": "hello world!", "api": "auth"}), 200
 
 
 
@@ -24,8 +18,3 @@ def signin():
             return {'token': token}, 200
         return "Wrong password.", 400
     return "Username and password needed.", 400
-
-
-
-# token : token = auth\_header.split(" ")\[1\] if " " in auth\_header else auth\_header
-# token : token = request.headers.get('Authorization')

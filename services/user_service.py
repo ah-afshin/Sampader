@@ -8,7 +8,6 @@ from werkzeug.security import (
 import os
 from database import (
     User,
-    UserStatus,
     followers_table,
     blocks_table,
     Session,
@@ -31,9 +30,7 @@ def new_user(username, email, name, bio, profile, banner, school_class, password
         # creating user
         user = User(username, email, name, bio, profile, banner, school_class, password, salt.hex())
         if user.name is not None:
-
             # if user was created succesfully
-            user.status = UserStatus(user.userID)
             session.add(user)
             session.commit()
             return True
@@ -286,16 +283,3 @@ def update_password(userid, password):
         return True
     return False
 
-
-
-
-
-
-"""
-### maybe here? ###
-# def username_available(self, username, email):
-#     session = Session()
-#     # checking for similar email or username
-#     return not session.query(
-#         session.query(User).filter_by(username=username, email=email).exists()
-#     ).scalar()"""

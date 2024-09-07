@@ -9,8 +9,7 @@ from database import (
     LikesTable,
     Session
 )
-from . import get_user_by_userid ###
-# from .user_service import get_user_by_userid
+from .user_service import get_user_by_userid
 
 
 
@@ -63,7 +62,6 @@ def get_comments(postid):
     session = Session()
     # Alias for counting likes
     likes_count = func.count(LikesTable.c.userid)
-
     # Query to get comments with like counts
     comments = (
         session.query(Post)
@@ -109,7 +107,6 @@ def add_like(userid, postid):
 
 def is_liked(userid, postid):
     session = Session()
-    # did this user liked this post?
     return session.query(
         session.query(LikesTable).filter_by(postid=postid, userid=userid).exists()
     ).scalar()
@@ -119,7 +116,7 @@ def remove_like(user, post):
     session = Session()
     # to remove someuser's like on a post
     try:
-        #    remove a record from likes table
+        # remove a record from likes table
         if session.query(LikesTable).filter_by(postid=post, userid=user).delete():
             session.commit()
             return True
@@ -143,7 +140,7 @@ def search_post(txt):
     query = select(Post.text, Post.postID)
     texts = session.execute(query).fetchall()
     scores = {}
-    
+
     # comparing each text with ours.
     for i in texts:
         # similarity score
@@ -159,7 +156,7 @@ def search_post(txt):
         # count is the similarity score of this username
         scores[i[1]] = count
     
-    # choosing 3 top matches
+    # choosing 5 top matches
     print("xxx" , scores)
     sorted_scores = sorted(
         scores.items(),

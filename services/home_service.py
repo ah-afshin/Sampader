@@ -11,7 +11,6 @@ import datetime, math, random, requests
 from database import (
     User,
     Post,
-    UserStatus,
     Session,
     followers_table,
     blocks_table
@@ -26,8 +25,8 @@ from .post_service import (
 def seen(user:User):
     session = Session()
     stmt = (
-        update(UserStatus).
-        where(UserStatus.ID == user.userID).
+        update(User).
+        where(User.userID == user.userID).
         values(lastseen=datetime.datetime.now().strftime("%Y%m%d%H%M"))
     )
     # Execute the update statement
@@ -41,15 +40,11 @@ def seen(user:User):
 
 def following_posts(user:User):
     session = Session()
-    # lastseen = datetime.datetime.strptime(user.status.lastseen, "%Y%m%d%H%M")
-    lastseen = user.status.lastseen
+    lastseen = user.lastseen
 
-    # # Alias for the User table to distinguish between followers and followees
-    # FollowedUser = aliased(User)
     posts = (
         session.query(Post)
         .join(followers_table, followers_table.c.followed_id == Post.authorID)
-        # .join(FollowedUser, FollowedUser.userID == followers_table.c.followed_id)
         .filter(
             followers_table.c.follower_id == user.userID,  # Only include followed users
             Post.date > lastseen,  # Only include posts after the specified datetime
@@ -119,14 +114,13 @@ def prefered_posts(user:User, n=25):
     # calculate preference score
     for post in recent_posts:
         if post.category:
-            score = intrests[post.category] + calculate_recency_score(post.date, current_time=now) + (len(post.likes)*0.1)
+            score = intrests[post.category] + calculate_recency_score(post.date, current_time=now) + (len(post.likes)*0.2)
             result.append((score, post))
         else:
-            score = calculate_recency_score(post.date, current_time=now) + (len(post.likes)*0.1)
+            score = calculate_recency_score(post.date, current_time=now) + (len(post.likes)*0.25)
             result.append((score, post))
     # sort and choose n posts by preference score
     sorted_pairs = sorted(result, key=lambda pair: pair[0], reverse=True)
-    # print(sorted_pairs)
     return [p[1] for p in sorted_pairs[-n:]]
 
 
@@ -153,7 +147,6 @@ def handle_post_category(postid):
     try:
         p = get_post(postid)
         if p:
-            # some logic
             try:
                 req = requests.post(
                     "https://palmix.pythonanywhere.com/sampader-category-gemini",
@@ -213,6 +206,7 @@ def get_most_followed_users(limit=5):
         .all()
     )
     return [i[0] for i in most_followed_users]
+
 
 def suggest_people(userid):
     res = get_most_followed_users()

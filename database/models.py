@@ -16,8 +16,6 @@ from .associations import (
 
 
 
-
-
 class User(Base):
     __tablename__ = "users"
 
@@ -35,6 +33,7 @@ class User(Base):
     # profile details
     joined_date = Column("date", String(8))
     verified = Column("verified", String(1))
+    lastseen = Column("lastseen", String(12))
     school_and_class = Column("class", String)###
 
     # secret fields
@@ -65,23 +64,13 @@ class User(Base):
         secondaryjoin=userID == blocks_table.c.blocker_id,
         backref="blockings"
     )
-    status = relationship(
-        "UserStatus",
-        back_populates="user",
-        uselist=False
-    )
     notifications = relationship(
         'Notification',
         back_populates='user'
     )
 
     def __init__(self, username, email, name, bio, profile, banner, school_class, password, password_salt):
-        if (
-            (school_class in school_and_class) #and
-            # helpers.profile_exists(profile) and
-            # helpers.banner_exists(banner) #and
-            # helpers.username_available(username, email)
-        ):
+        if ((school_class in school_and_class)):
             self.username = username
             self.email = email
             self.name = name
@@ -105,27 +94,26 @@ class Post(Base):
     __tablename__ = "posts"
 
     postID = Column("postID", String(36), primary_key=True, default=helpers.generate_uuid)
-    date = Column("date", String(12)) # when was it posted
+    date = Column("date", String(12))
     text = Column("text", String(MAX_POST_LEN), nullable=False)
     
     # post category is going to be set by AI later.
-    category = Column("category", String, nullable=True) #???
-    # if the post has any attachments like image, video, etc it would be stored here
+    category = Column("category", String, nullable=True)
+    # posts attachments e.g. image
     contents = Column("contents", String(40), nullable=True)
-    
     authorID = Column("authorID", String(36), ForeignKey("users.userID"), nullable=False)
+    # if the post is a comment on another post, it would have a parent id
+    parentID = Column("parentID", String(36), ForeignKey("posts.postID"), nullable=True)
+    
+    # relations
     author = relationship(
         "User",
         back_populates="posts"
     )
-    
-    # if the post is a comment on another post, it would have a parent id
-    parentID = Column("parentID", String(36), ForeignKey("posts.postID"), nullable=True)
     parent = relationship(
         "Post",
         remote_side=[postID]
     )
-
     likes = relationship(
         "User",
         secondary=LikesTable,
@@ -136,34 +124,16 @@ class Post(Base):
         self.author = author
         self.text = text
         self.date = datetime.datetime.now().strftime("%Y%m%d%H%M")
-        if parent:
-            self.parent = parent
+        self.parent = parent
         self.contents = contents
     
     def __repr__(self):
         return f"<post '{self.text[:6]}' by {self.author.username}>"
 
 
-class UserStatus(Base):
-    __tablename__ = "user_status"
-    ID = Column("ID", String(36), ForeignKey("users.userID"), primary_key=True)
-    # categories = Column("categories", String) ###
-    lastseen = Column("lastseen", String(12))
-    user = relationship(
-        "User",
-        back_populates="status"
-    )
-
-    def __init__(self, userid):
-        self.ID = userid
-        self.lastseen = datetime.datetime.now().strftime("%Y%m%d%H%M")
-        self.notifications = ""
-
-
 class Notification(Base):
     __tablename__ = 'notifications'
 
-    # id = Column(Integer, primary_key=True, autoincrement=True)
     id = Column(String(36), primary_key=True, default=helpers.generate_uuid)
     user_id = Column(String, ForeignKey('users.userID'))  # user receiving the notification
     content = Column(String, nullable=False)
@@ -171,7 +141,7 @@ class Notification(Base):
     # is_read = Column(Boolean, default=False)
     # created_at = Column(DateTime, default=datetime.utcnow)
 
-    # Relationship (if you need to access the user object)
+    # relations
     user = relationship(
         'User',
         back_populates='notifications'

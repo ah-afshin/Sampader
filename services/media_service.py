@@ -24,17 +24,13 @@ def new_profile_image(image_base64):
         # Decode the base64 image
         image_data = base64.b64decode(image_base64)
         image = Image.open(BytesIO(image_data))
-
         # Resize the image
         image = resize_image(image, MAX_SIZE_PROFILE)
-
-        # choosing a name for image
+        # choose a name for image
         name = generate_uuid()+".jpg"
-
         # Save the image to the uploads directory
         save_path = os.path.join(UPLOADS_PATH+"/profile", name)
         image.save(save_path)
-
         return True, name
     except Exception as e:
         print(e)
@@ -47,17 +43,13 @@ def new_banner_image(image_base64):
         # Decode the base64 image
         image_data = base64.b64decode(image_base64)
         image = Image.open(BytesIO(image_data))
-
         # Resize the image
         image = resize_image(image, MAX_SIZE)
-
-        # choosing a name for image
+        # choose a name for image
         name = generate_uuid()+".jpg"
-
         # Save the image to the uploads directory
         save_path = os.path.join(UPLOADS_PATH+"/banner", name)
         image.save(save_path)
-
         return True, name
     except Exception as e:
         print(e)
@@ -70,17 +62,13 @@ def new_content_image(image_base64):
         # Decode the base64 image
         image_data = base64.b64decode(image_base64)
         image = Image.open(BytesIO(image_data))
-
         # Resize the image
         image = resize_image(image, MAX_SIZE)
-
-        # choosing a name for image
+        # choose a name for image
         name = generate_uuid()+".jpg"
-
         # Save the image to the uploads directory
         save_path = os.path.join(UPLOADS_PATH+"/media", name)
         image.save(save_path)
-
         return True, name
     except Exception as e:
         return False, "Failed to process and save the image"

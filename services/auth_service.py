@@ -5,19 +5,17 @@ from werkzeug.security import check_password_hash
 from database import (
     User,
     Session
-    # get_session
 )
 
 
 def check_user(username, password):
-    query = select(User.password, User.password_salt, User.userID).where(User.username==username) # a query to get password and salt of user
-    # session = get_session()
     session = Session()
     try:
+        query = select(User.password, User.password_salt, User.userID).where(User.username==username) # a query to get password and passsalt of user
         hashed_password, salt, userid = session.execute(query).fetchone() # getting data
         return check_password_hash(hashed_password, password + salt), userid # checking password if it fits the user
     except Exception as e:
-        # if the user doesn't exist there would be an error.
+        # if the user doesn't exist.
         session.rollback()
         return False, ""
 

@@ -7,21 +7,6 @@ from .constants import SECRET_KEY
 from .post_routes import post_dto
 from .user_routes import user_dto2
 
-def notif_dto(notifObj, userid):
-    actions = {"l": "like", "c": "comment", "f": "follow"}
-    data = user_dto2(get_user_by_userid(notifObj.content), userid) if notifObj.notification_type=="f" else notifObj.content
-    return {
-        "user": notifObj.user_id,
-        "action": actions[notifObj.notification_type],
-        "data": data,
-        "seen": False
-    }
-
-
-@home_bp.route('/api/test_home', methods=['GET'])
-def test():
-    return jsonify({"testing": "hello world!", "api": "home"}), 200
-
 
 @home_bp.route('/api/home', methods=["POST", "GET"])
 def homepage_api():

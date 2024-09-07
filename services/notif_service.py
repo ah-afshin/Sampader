@@ -1,6 +1,4 @@
 from sqlalchemy import (
-    select,
-    update,
     delete
 )
 from database import (
@@ -22,15 +20,13 @@ def new_notification(userid, content, ntype):
             session.commit()
             return True
         return False
-    except: #Exception as e:
-        # print(e)
+    except:
         session.rollback()
         return False
 
 
 def delete_notification(id): ###
     session = Session()
-    # to delete a post we should delete a record
     try:
         query = delete(Notification).where(
             Notification.id == id
@@ -45,7 +41,6 @@ def delete_notification(id): ###
 
 def delete_all_notifications(userid):
     session = Session()
-    # to delete a post we should delete a record
     try:
         query = delete(Notification).where(
             Notification.user_id == userid

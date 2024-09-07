@@ -3,7 +3,7 @@ from .base import Base
 
 
 
-# Association table for the many-to-many self-referencing relationship
+# Association table for the many-to-many self-referencing relationship in `User`
 blocks_table = Table(
     'block',
     Base.metadata,
@@ -11,7 +11,7 @@ blocks_table = Table(
     Column('blocked_id', String, ForeignKey('users.userID'), primary_key=True)
 )
 
-# Association table for the many-to-many self-referencing relationship
+# Association table for the many-to-many self-referencing relationship in `User`
 followers_table = Table(
     'follow',
     Base.metadata,
@@ -19,7 +19,7 @@ followers_table = Table(
     Column('followed_id', String, ForeignKey('users.userID'), primary_key=True)
 )
 
-# Association table for the many-to-many relationship (users and posts)
+# Association table for the many-to-many relationship in `User` and `Post`
 LikesTable = Table(
     "likes",
     Base.metadata,

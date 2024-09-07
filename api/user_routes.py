@@ -1,50 +1,11 @@
 from flask import Blueprint, request, jsonify, send_file
 from services import *
-from database import User
-from .post_routes import post_dto, comments_dto
+from .post_routes import post_dto
 
 
 user_bp = Blueprint('user_bp', __name__)
 from .constants import *
 
-
-def user_dto(userObj:User, userid:str):
-    return {
-        "id": userObj.userID,
-        "username": userObj.username,
-        "email": userObj.email,
-        "name": userObj.name,
-        "bio": userObj.bio,
-        "profile": URL_PATH+"/profile/"+userObj.profile,
-        "banner": URL_PATH+"/banner/"+userObj.banner,
-        "joined_date": userObj.joined_date,
-        "verified": userObj.verified,
-        "school_and_class": userObj.school_and_class,
-        "followers": len(userObj.followers),
-        "followings": len(userObj.followings),
-        # "block": [u.username for u in userObj.blockings], 
-        "posts": [post_dto(post) for post in get_users_posts(userObj.userID)],
-        "comment": [comments_dto(post) for post in get_users_comments(userObj.userID)],
-        "likes": [post_dto(post) for post in userObj.get_likes()],
-        "isfollowed": str(is_followed(userid, userObj.userID)),
-        "isfollowing": str(is_followed(userObj.userID, userid))
-    }
-
-
-def user_dto2(userObj:User, userid:str):
-    return {
-        "id": userObj.userID,
-        "username": userObj.username,
-        "name": userObj.name,
-        "profile": URL_PATH+"/profile/"+userObj.profile,
-        "joined_date": userObj.joined_date,
-        "verified": userObj.verified,
-        "school_and_class": userObj.school_and_class,
-        "followers": len(userObj.followers),
-        "followings": len(userObj.followings),
-        "isfollowed": str(is_followed(userid, userObj.userID)),
-        "isfollowing": str(is_followed(userObj.userID, userid))
-    }
 
 
 @user_bp.route('/profile/<img>', methods=['GET'])
@@ -61,12 +22,6 @@ def banner_image(img):
         return send_file(UPLOADS_PATH+"/banner/"+img)
     except Exception as e:
         return f"Error: {e}", 500
-
-
-
-@user_bp.route('/api/test_user', methods=['GET'])
-def test():
-    return jsonify({"testing": "hello world!", "api": "user"}), 200
 
 
 
@@ -99,12 +54,11 @@ def sign_up_api():
 
 
 @user_bp.route('/api/search', methods=['POST'])
-def search_api(): # and post
+def search_api():
     term = request.json.get("SEARCH_TERM")
     if term:
-        print(search_post(term))
         return jsonify({
-            "matched_user_ids": [user_dto2(get_user_by_username(i), "") for i in search_user(term)],
+            "matched_user_ids": [user_dto2(get_user_by_username(i), "", URL_PATH) for i in search_user(term)],
             "matched_post_ids": [post_dto(get_post(i)) for i in search_post(term)]
         }), 200
     return "Search term is required.", 400
@@ -125,7 +79,7 @@ def get_single_user_api():
         result = get_user_by_userid(userid)
         if result is None:
             return "User not found.", 404
-        return jsonify(user_dto(result, userid)), 200
+        return jsonify(user_dto(result, userid, URL_PATH)), 200
     return "User ID is required.", 400
 
 
@@ -145,7 +99,7 @@ def get_many_users_api():
         for i in lst:
             user = get_user_by_userid(i)
             if user:
-                result.append(user_dto(user, userid))
+                result.append(user_dto(user, userid, URL_PATH))
         return jsonify(result), 200
     return "User ID list is required.", 400
 
@@ -164,8 +118,8 @@ def get_follow_api():
     if username:
         user = get_user_by_username(username)
         return jsonify({
-            'followers': [user_dto(i, userid) for i in user.followers],
-            'followings': [user_dto(i, userid) for i in user.followings]
+            'followers': [user_dto2(i, userid, URL_PATH) for i in user.followers],
+            'followings': [user_dto2(i, userid, URL_PATH) for i in user.followings]
         }), 200
     return "Username is required", 400
 
@@ -188,29 +142,9 @@ def follow_api():
         unfollow(userid, followid)
         return "User was successfully unfollowed.", 200
     if follow(userid, followid):
-        print(new_notification(get_user_by_userid(followid).userID, userid, "f"))
+        new_notification(followid, userid, "f")
         return "User was successfully followed.", 200
     return "Failed to follow user.", 400
-
-    # if request.json.get('FOLLOW_ID') and follow(userid, request.json['FOLLOW_ID']):
-    #     return "User was successfully followed.", 200
-    # return "Failed to follow user.", 400
-
-
-
-# @user_bp.route('/api/unfollow', methods=['POST'])
-def unfollow_api(): ###
-    token = request.headers.get('Authorization')
-    if token is None:
-        return "Missing Authorization Header (JWT)", 401
-    done, userid = token_validate(token.split()[1], SECRET_KEY)
-    if not done:
-        return "Your token in expired.", 401
-    
-    if request.json.get('FOLLOW_ID'):
-        unfollow(userid, request.json['FOLLOW_ID'])
-        return "User was successfully unfollowed.", 200
-    return "Failed to unfollow user.", 400
 
 
 
@@ -243,28 +177,9 @@ def block_api():
         return "User was successfully unblocked.", 200
     if block(userid, request.json['BLOCK_ID']):
         unfollow(userid, request.json['BLOCK_ID'])
+        unfollow(request.json['BLOCK_ID'], userid)
         return "User was successfully blocked.", 200
     return "Failed to block user.", 400
-    
-    # if request.json.get('BLOCK_ID') and block(userid, request.json['BLOCK_ID']):
-    #     return "User was successfully blocked.", 200
-    # return "Failed to block user.", 400
-
-
-
-# @user_bp.route('/api/unblock', methods=['POST'])
-def unblock_api(): ###
-    token = request.headers.get('Authorization')
-    if token is None:
-        return "Missing Authorization Header (JWT)", 401
-    done, userid = token_validate(token.split()[1], SECRET_KEY)
-    if not done:
-        return "Your token in expired.", 401
-
-    if request.json.get('BLOCK_ID'):
-        unblock(userid, request.json['BLOCK_ID'])
-        return "User was successfully unblocked.", 200
-    return "Failed to unblock user.", 400
 
 
 

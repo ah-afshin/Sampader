@@ -1,5 +1,4 @@
 from flask import Blueprint, request, jsonify, send_file
-from database import Post
 from services import *
 import threading
 
@@ -8,64 +7,12 @@ post_bp = Blueprint('post_bp', __name__)
 from .constants import *
 
 
-def post_dto(postObj:Post):
-    return {
-        "text": postObj.text,
-        "contents": [
-            URL_PATH+"/media/"+postObj.contents if postObj.contents else "" # just an image yet.
-        ],
-        "date": postObj.date,
-        "id": postObj.postID,
-        "name": postObj.author.name,
-        "user_id": postObj.author.userID,
-        "username": postObj.author.username,
-        "profile": postObj.author.profile,
-        "verified": postObj.author.verified,
-        "public_data": {
-            "views": "0", ###
-            "likes": len(postObj.likes),
-            "comments": len(get_comments(postObj.postID))
-        },
-        "parent": "0", ###
-        "category": str(postObj.category)
-    }
-
-
-def comments_dto(commentObj:Post):
-    return {
-        "text": commentObj.text,
-        "contents": [
-            URL_PATH+"/media/"+commentObj.contents if commentObj.contents else "" # just an image yet.
-        ],
-        "date": commentObj.date,
-        "id": commentObj.postID,
-        "name": commentObj.author.name,
-        "user_id": commentObj.author.userID,
-        "username": commentObj.author.username,
-        "profile": URL_PATH+"/profile/"+commentObj.author.profile,
-        "verified": commentObj.author.verified,
-        "public_data": {
-            "views": "0", ###
-            "likes": len(commentObj.likes),
-            "comments": len(get_comments(commentObj.postID))
-        },
-        "parent": commentObj.parentID,
-        "parent_data": post_dto(commentObj.parent) ###
-    }
-
-
 @post_bp.route('/media/<img>', methods=['GET'])
 def content_image(img):
     try:
         return send_file(UPLOADS_PATH+"/media/"+img)
     except Exception as e:
         return f"Error: {e}", 500
-
-
-
-@post_bp.route('/api/test_post', methods=['GET'])
-def test():
-    return jsonify({"testing": "hello world!", "api": "post"}), 200
 
 
 
@@ -103,7 +50,7 @@ def get_single_post_api():
         result = get_post(post)
         if result is None:
             return "Post not found.", 404
-        return jsonify(post_dto(result)), 200
+        return jsonify(post_dto(result, URL_PATH)), 200
     return "Post ID is required.", 400
 
 
@@ -116,7 +63,7 @@ def get_many_posts_api():
         for i in lst:
             post = get_post(i)
             if post:
-                result.append(post_dto(post))
+                result.append(post_dto(post, URL_PATH))
         return jsonify(result), 200
     return "Post ID list is required.", 400
 
@@ -126,7 +73,7 @@ def get_many_posts_api():
 def get_post_comments_api():
     postid = request.json.get("POST_ID")
     if postid:
-        res = [comments_dto(i) for i in get_comments(postid)]
+        res = [comments_dto(i, URL_PATH) for i in get_comments(postid)]
         return jsonify(res), 200
     return "Post ID is required.", 400
 
@@ -189,9 +136,3 @@ def delete_post_api():
             return "Post was successfully deleted", 200
         return "Failed to deleted the post.", 400
     return "You can delete your own posts only.", 403
-
-
-
-# @post_bp.route('/api/', methods=["POST"])
-def p():
-    pass
