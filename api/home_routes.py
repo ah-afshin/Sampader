@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
 from services import *
+from extensions import limiter
 
 
 home_bp = Blueprint('home_bp', __name__)
@@ -9,6 +10,7 @@ from .user_routes import user_dto2
 
 
 @home_bp.route('/api/home', methods=["POST", "GET"])
+@limiter.limit("10 per 12 hour")
 def homepage_api():
     token = request.headers.get('Authorization')
     if token is None:
@@ -26,6 +28,7 @@ def homepage_api():
 
 
 @home_bp.route('/api/notifications-number', methods=["POST", "GET"])
+@limiter.limit("20 per 1 hour")
 def notifnum_api():
     token = request.headers.get('Authorization')
     if token is None:
@@ -37,6 +40,7 @@ def notifnum_api():
 
 
 @home_bp.route('/api/notifications', methods=["POST", "GET"])
+@limiter.limit("30 per 2 hour")
 def notif_api():
     token = request.headers.get('Authorization')
     if token is None:
@@ -48,6 +52,7 @@ def notif_api():
 
 
 @home_bp.route('/api/recommended-people', methods=["POST", "GET"])
+@limiter.limit("10 per 1 hour")
 def recommended_people_api():
     token = request.headers.get('Authorization')
     if token is None:

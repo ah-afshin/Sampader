@@ -3,8 +3,7 @@ aniso8601
 bcrypt
 click==8.1.7
 Flask==3.0.3
-Flask-RESTful
-Flask-SQLAlchemy
+Flask-Limiter
 itsdangerous==2.2.0
 Jinja2==3.1.4
 jwt

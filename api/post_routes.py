@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify, send_file
 from services import *
 import threading
+from extensions import limiter
 
 
 post_bp = Blueprint('post_bp', __name__)
@@ -8,6 +9,7 @@ from .constants import *
 
 
 @post_bp.route('/media/<img>', methods=['GET'])
+@limiter.limit("1/second")
 def content_image(img):
     try:
         return send_file(UPLOADS_PATH+"/media/"+img)
@@ -17,6 +19,7 @@ def content_image(img):
 
 
 @post_bp.route('/api/create_post', methods=["POST"])
+@limiter.limit("50 per 1 hour")
 def create_post_api():
     token = request.headers.get('Authorization')
     if token is None:
@@ -44,6 +47,7 @@ def create_post_api():
 
 
 @post_bp.route('/api/get_post', methods=["POST"])
+@limiter.limit("60 per 1 hour")
 def get_single_post_api():
     post = request.json.get("POST_ID")
     if post:
@@ -56,6 +60,7 @@ def get_single_post_api():
 
 
 @post_bp.route('/api/get_posts', methods=["POST"])
+@limiter.limit("60 per 1 hour")
 def get_many_posts_api():
     lst = request.json.get("POST_ID_LST")
     if lst:
@@ -70,6 +75,7 @@ def get_many_posts_api():
 
 
 @post_bp.route('/api/post_comments', methods=["POST"])
+@limiter.limit("100 per 1 hour")
 def get_post_comments_api():
     postid = request.json.get("POST_ID")
     if postid:
@@ -80,6 +86,7 @@ def get_post_comments_api():
 
 
 @post_bp.route('/api/is_post_liked', methods=["POST"])
+@limiter.limit("1 per 1 second")
 def is_post_liked_api():
     token = request.headers.get('Authorization')
     if token is None:
@@ -96,6 +103,7 @@ def is_post_liked_api():
 
 
 @post_bp.route('/api/like', methods=["POST"])
+@limiter.limit("3 per 5 second")
 def like_api():
     token = request.headers.get('Authorization')
     if token is None:
@@ -120,6 +128,7 @@ def like_api():
 
 
 @post_bp.route('/api/delete_post', methods=["POST"])
+@limiter.limit("1 per 2 second")
 def delete_post_api():
     token = request.headers.get('Authorization')
     if token is None:

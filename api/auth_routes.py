@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
 import services as s
+from extensions import limiter
 
 
 auth_bp = Blueprint('auth_bp', __name__)
@@ -8,6 +9,7 @@ from .constants import SECRET_KEY
 
 
 @auth_bp.route('/api/signin', methods=["POST"])
+@limiter.limit("24 per 12 hour")
 def signin():
     username = request.json.get('USERNAME')
     password = request.json.get('PASSWORD')

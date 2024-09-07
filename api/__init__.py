@@ -1,5 +1,6 @@
 from flask import Flask
 from database import shutdown_session
+from extensions import limiter
 
 
 def create_app():
@@ -23,5 +24,7 @@ def create_app():
     def shutdown_session_on_teardown(exception=None):
         shutdown_session(exception)
 
+    # Initialize the limiter with the app
+    limiter.init_app(app)
     print("the APP was imported.")
     return app

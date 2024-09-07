@@ -1,6 +1,8 @@
 from flask import Blueprint, request, jsonify, send_file
 from services import *
 from .post_routes import post_dto
+from extensions import limiter
+
 
 
 user_bp = Blueprint('user_bp', __name__)
@@ -9,6 +11,7 @@ from .constants import *
 
 
 @user_bp.route('/profile/<img>', methods=['GET'])
+@limiter.limit("1/second")
 def profile_image(img):
     try:
         return send_file(UPLOADS_PATH+"/profile/"+img)
@@ -17,6 +20,7 @@ def profile_image(img):
 
 
 @user_bp.route('/banner/<img>', methods=['GET'])
+@limiter.limit("1/second")
 def banner_image(img):
     try:
         return send_file(UPLOADS_PATH+"/banner/"+img)
@@ -26,6 +30,7 @@ def banner_image(img):
 
 
 @user_bp.route('/api/signup', methods=['POST'])
+@limiter.limit("3 per 1 day")
 def sign_up_api():
     try:
         done, profile = new_profile_image(request.json["PROFILE"])
@@ -54,6 +59,7 @@ def sign_up_api():
 
 
 @user_bp.route('/api/search', methods=['POST'])
+@limiter.limit("50 per 1 day")
 def search_api():
     term = request.json.get("SEARCH_TERM")
     if term:
@@ -66,6 +72,7 @@ def search_api():
 
 
 @user_bp.route('/api/get_user', methods=['POST'])
+@limiter.limit("600 per 1 hour")
 def get_single_user_api():
     token = request.headers.get('Authorization')
     if token is None:
@@ -85,6 +92,7 @@ def get_single_user_api():
 
 
 @user_bp.route('/api/get_users', methods=['POST'])
+@limiter.limit("600 per 1 hour")
 def get_many_users_api():
     token = request.headers.get('Authorization')
     if token is None:
@@ -106,6 +114,7 @@ def get_many_users_api():
 
 
 @user_bp.route('/api/get_follow', methods=['POST'])
+@limiter.limit("50 per 1 hour")
 def get_follow_api():
     token = request.headers.get('Authorization')
     if token is None:
@@ -126,6 +135,8 @@ def get_follow_api():
 
 
 @user_bp.route('/api/follow', methods=['POST'])
+@limiter.limit("60 per 1 hour")
+@limiter.limit("2 per 5 second")
 def follow_api():
     token = request.headers.get('Authorization')
     if token is None:
@@ -149,6 +160,7 @@ def follow_api():
 
 
 @user_bp.route('/api/is_followed', methods=['POST'])
+@limiter.limit("100 per 1 hour")
 def is_followed_api():
     token = request.headers.get('Authorization')
     if token is None:
@@ -164,6 +176,8 @@ def is_followed_api():
 
 
 @user_bp.route('/api/block', methods=['POST'])
+@limiter.limit("60 per 1 hour")
+@limiter.limit("2 per 5 second")
 def block_api():
     token = request.headers.get('Authorization')
     if token is None:
@@ -184,6 +198,7 @@ def block_api():
 
 
 @user_bp.route('/api/is_blocked', methods=['POST'])
+@limiter.limit("100 per 1 hour")
 def is_blocked_api():
     token = request.headers.get('Authorization')
     if token is None:
@@ -201,6 +216,7 @@ def is_blocked_api():
 
 
 @user_bp.route('/api/change_profile', methods=['POST'])
+@limiter.limit("3 per 1 hour")
 def change_account_detail_api():
     token = request.headers.get('Authorization')
     if token is None:
