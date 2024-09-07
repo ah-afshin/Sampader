@@ -2,7 +2,7 @@ from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy import create_engine
 from . import constants, helpers
 from .base import Base
-from .models import User, Post , UserStatus
+from .models import User, Post , UserStatus, Notification
 from .associations import LikesTable, followers_table, blocks_table
 
 

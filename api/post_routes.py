@@ -86,6 +86,9 @@ def create_post_api():
     content = None if request.json.get("POST_CONTENT")==[] else request.json.get("POST_CONTENT")[0]
     done, postid = new_post(userid, text, parentid, content)
     if done:
+        if parentid is not None:
+            # its a comment
+            new_notification(get_post(parentid).authorID, userid, "c")
         thread = threading.Thread(target=handle_post_category, kwargs={"postid": postid})
         thread.start()
         return "Post was successfully created.", 201
@@ -163,6 +166,7 @@ def like_api():
             return "Post was successfully unliked.", 200
         return "Failed to unlike post.", 400
     if add_like(userid, postid):
+        new_notification(get_post(postid).authorID, userid, "l")
         return "Post was successfully liked.", 200
     return "Failed to like post.", 400
 

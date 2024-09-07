@@ -188,6 +188,7 @@ def follow_api():
         unfollow(userid, followid)
         return "User was successfully unfollowed.", 200
     if follow(userid, followid):
+        print(new_notification(get_user_by_userid(followid).userID, userid, "f"))
         return "User was successfully followed.", 200
     return "Failed to follow user.", 400
 

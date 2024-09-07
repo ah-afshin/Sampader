@@ -70,6 +70,10 @@ class User(Base):
         back_populates="user",
         uselist=False
     )
+    notifications = relationship(
+        'Notification',
+        back_populates='user'
+    )
 
     def __init__(self, username, email, name, bio, profile, banner, school_class, password, password_salt):
         if (
@@ -145,7 +149,6 @@ class UserStatus(Base):
     ID = Column("ID", String(36), ForeignKey("users.userID"), primary_key=True)
     # categories = Column("categories", String) ###
     lastseen = Column("lastseen", String(12))
-    notifications = Column("notifs", String)
     user = relationship(
         "User",
         back_populates="status"
@@ -155,3 +158,29 @@ class UserStatus(Base):
         self.ID = userid
         self.lastseen = datetime.datetime.now().strftime("%Y%m%d%H%M")
         self.notifications = ""
+
+
+class Notification(Base):
+    __tablename__ = 'notifications'
+
+    # id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(String(36), primary_key=True, default=helpers.generate_uuid)
+    user_id = Column(String, ForeignKey('users.userID'))  # user receiving the notification
+    content = Column(String, nullable=False)
+    notification_type = Column(String(1))  # e.g., 'like', 'comment', 'follow'
+    # is_read = Column(Boolean, default=False)
+    # created_at = Column(DateTime, default=datetime.utcnow)
+
+    # Relationship (if you need to access the user object)
+    user = relationship(
+        'User',
+        back_populates='notifications'
+    )
+
+    def __init__(self, userid, content, ntype):
+        self.user_id = userid
+        self.content = content
+        self.notification_type = ntype
+
+    def __repr__(self):
+        return f'<{self.notification_type} for "{self.user_id}">'

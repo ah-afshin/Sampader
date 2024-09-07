@@ -19,3 +19,8 @@ verified = [
     "s", # s verified as council
     "c", # c verified as celebrity
 ]
+notification_type = [
+    "l", # like
+    "c", # comment
+    "f", # follow
+]
