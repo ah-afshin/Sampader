@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block content %}
+<br><br>
+<div class="a">
+    <a href="{{ url_for('admin_bp.add_new_admin') }}">
+        <div class="blogMake">
+            <p style="display: inline-block; color: white;">
+                create a new admin account
+            </p>
+        </div>
+    </a>
+    <a href="{{ url_for('admin_bp.get_query') }}">
+        <div class="blogMake">
+            <p style="display: inline-block; color: white;">
+                query (to select)
+            </p>
+        </div>
+    </a>
+    <a href="{{ url_for('admin_bp.set_query') }}">
+        <div class="blogMake">
+            <p style="display: inline-block; color: white;">
+                query (to write or change)
+            </p>
+        </div>
+    </a>
+    <a href="{{ url_for('admin_bp.verify') }}">
+        <div class="blogMake">
+            <p style="display: inline-block; color: white;">
+                verify an account
+            </p>
+        </div>
+    </a>
+</div>
+{% endblock %}
