@@ -4,8 +4,7 @@ from sqlalchemy import (
     ForeignKey
 )
 from sqlalchemy.orm import relationship
-import datetime
-import database.helpers as helpers ###
+import datetime, uuid
 from .constants import *
 from .base import Base
 from .associations import (
@@ -16,11 +15,18 @@ from .associations import (
 
 
 
+# generate random id
+def generate_uuid():
+    # length of result would be 36 characters
+    return str(uuid.uuid4())
+
+
+
 class User(Base):
     __tablename__ = "users"
 
     # unique, not to be duplicated
-    userID = Column("userID", String(36), primary_key=True, default=helpers.generate_uuid)
+    userID = Column("userID", String(36), primary_key=True, default=generate_uuid)
     username = Column("username", String(MAX_USERNAME_LEN), unique=True)
     email = Column("email", String(MAX_EMAIL_LEN), unique=True)
     
@@ -93,7 +99,7 @@ class User(Base):
 class Post(Base):
     __tablename__ = "posts"
 
-    postID = Column("postID", String(36), primary_key=True, default=helpers.generate_uuid)
+    postID = Column("postID", String(36), primary_key=True, default=generate_uuid)
     date = Column("date", String(12))
     text = Column("text", String(MAX_POST_LEN), nullable=False)
     
@@ -134,7 +140,7 @@ class Post(Base):
 class Notification(Base):
     __tablename__ = 'notifications'
 
-    id = Column(String(36), primary_key=True, default=helpers.generate_uuid)
+    id = Column(String(36), primary_key=True, default=generate_uuid)
     user_id = Column(String, ForeignKey('users.userID'))  # user receiving the notification
     content = Column(String, nullable=False)
     notification_type = Column(String(1))  # e.g., 'like', 'comment', 'follow'

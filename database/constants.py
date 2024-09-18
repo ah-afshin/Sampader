@@ -1,7 +1,3 @@
-# db statics
-UPLOADS_PATH = "F://Sampader/uploads"
-DATABASE_URI = "sqlite:///database/data.db"
-
 # maximum length of database fields
 MAX_USERNAME_LEN = 40
 MAX_NAME_LEN = 80

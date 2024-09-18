@@ -4,7 +4,7 @@ from extensions import limiter
 
 
 auth_bp = Blueprint('auth_bp', __name__)
-from .constants import SECRET_KEY
+from configs import SECRET_KEY
 
 
 

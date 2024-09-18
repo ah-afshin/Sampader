@@ -15,15 +15,17 @@ import services as srv
 
 
 admin_bp = Blueprint('admin_bp', __name__, template_folder='../templates')
-ROOT_PATH = "F://Sampader/admin"
-DB_PATH = "F://Sampader/database/data.db"
-KEY = "cthc-mowz"
+from configs import (
+    ADMIN_ROOT_PATH,
+    SESSION_KEY,
+    DB_PATH
+)
 
 
 def sessionverified(session:dict):
     try:
         now = datetime.now().strftime("%Y%m%d%H%M")
-        data = jwt.decode(session['admin'], KEY, algorithms=["HS256"])
+        data = jwt.decode(session['admin'], SESSION_KEY, algorithms=["HS256"])
         if datetime.strptime(data["ex"], "%Y%m%d%H%M") > datetime.strptime(now, "%Y%m%d%H%M"):
             return True, data["id"]
         return False, (now, data["ex"])
@@ -31,10 +33,10 @@ def sessionverified(session:dict):
         return False, "b"
 def new_admin(username, password):
     adminData = json.loads(
-        open(f"{ROOT_PATH}/data.json", encoding="utf-8").read()
+        open(f"{ADMIN_ROOT_PATH}/data.json", encoding="utf-8").read()
     )
     adminActivityData = json.loads(
-        open(f"{ROOT_PATH}/activity.json", encoding="utf-8").read()
+        open(f"{ADMIN_ROOT_PATH}/activity.json", encoding="utf-8").read()
     )
     newAdminId = str(len(adminData) + 1)
     adminData[newAdminId] = {
@@ -43,19 +45,19 @@ def new_admin(username, password):
         "password": password
     }
     adminActivityData[username] = {}
-    with open(f"{ROOT_PATH}/data.json", "w", encoding="utf-8") as f:
+    with open(f"{ADMIN_ROOT_PATH}/data.json", "w", encoding="utf-8") as f:
         json.dump(adminData, f, ensure_ascii=False, indent=4)
-    with open(f"{ROOT_PATH}/activity.json", "w", encoding="utf-8") as f:
+    with open(f"{ADMIN_ROOT_PATH}/activity.json", "w", encoding="utf-8") as f:
         json.dump(adminActivityData, f, ensure_ascii=False, indent=4)
 
 def new_activity(username, data):
     adminActivityData = json.loads(
-        open(f"{ROOT_PATH}/activity.json", encoding="utf-8").read()
+        open(f"{ADMIN_ROOT_PATH}/activity.json", encoding="utf-8").read()
     )
     now = datetime.now()
     now_str = now.strftime("%Y/%m/%d-%H:%M:%S")
     adminActivityData[username][now_str] = data
-    with open(f"{ROOT_PATH}/activity.json", "w", encoding="utf-8") as f:
+    with open(f"{ADMIN_ROOT_PATH}/activity.json", "w", encoding="utf-8") as f:
         json.dump(adminActivityData, f, ensure_ascii=False, indent=4)
 
 
@@ -71,7 +73,7 @@ def login():
     if request.method=="POST":
         username = request.form['username']
         password = request.form['password']
-        userData = json.loads(open(f"{ROOT_PATH}/data.json", encoding="utf-8").read())
+        userData = json.loads(open(f"{ADMIN_ROOT_PATH}/data.json", encoding="utf-8").read())
         pass_word = ""
         for userId in userData:
             if userData[userId]["username"] == username:
@@ -82,7 +84,7 @@ def login():
                 "id": username,
                 "ex": date.strftime("%Y%m%d%H%M")
             }
-            session['admin'] = jwt.encode(data, KEY, algorithm="HS256")
+            session['admin'] = jwt.encode(data, SESSION_KEY, algorithm="HS256")
             return redirect('/admin')
         return render_template("login.html")
     else:

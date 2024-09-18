@@ -3,7 +3,7 @@ import base64
 from io import BytesIO
 from PIL import Image
 from database.constants import UPLOADS_PATH
-from database.helpers import generate_uuid
+from database.models import generate_uuid
 
 
 

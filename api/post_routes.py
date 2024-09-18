@@ -5,7 +5,7 @@ from extensions import limiter
 
 
 post_bp = Blueprint('post_bp', __name__)
-from .constants import *
+from configs import *
 
 
 @post_bp.route('/media/<img>', methods=['GET'])

@@ -4,7 +4,7 @@ from extensions import limiter
 
 
 home_bp = Blueprint('home_bp', __name__)
-from .constants import SECRET_KEY
+from configs import SECRET_KEY
 from .post_routes import post_dto
 from .user_routes import user_dto2
 
