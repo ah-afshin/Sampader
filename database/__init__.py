@@ -1,13 +1,12 @@
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy import create_engine
-from . import constants
 from .base import Base
 from .models import User, Post, Notification
 from .associations import LikesTable, followers_table, blocks_table
 
 
 
-def shutdown_session(exception=None):
+def shutdown_session():
     # session needs to be refreshed by each request
     # we are making instant session objects in `services`
     # and these sessions need to be removed

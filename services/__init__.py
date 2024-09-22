@@ -5,5 +5,3 @@ from .home_service import *
 from .media_service import *
 from .notif_service import *
 from .serializers import *
-
-print("services module imported.")

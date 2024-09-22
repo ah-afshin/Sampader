@@ -22,9 +22,8 @@ def create_app():
     # Register the teardown function to clean up the session
     @app.teardown_appcontext
     def shutdown_session_on_teardown(exception=None):
-        shutdown_session(exception)
+        shutdown_session()
 
     # Initialize the limiter with the app
     limiter.init_app(app)
-    print("the APP was imported.")
     return app

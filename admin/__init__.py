@@ -1,1 +1,1 @@
-from .views import admin_bp, KEY
+from .views import admin_bp

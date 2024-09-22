@@ -8,5 +8,4 @@ app.register_blueprint(admin_bp)
 app.secret_key = SESSION_KEY
 
 if __name__ == "__main__":
-    print("starting the app.")
-    app.run(debug=True)
+    app.run()

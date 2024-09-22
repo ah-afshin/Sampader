@@ -44,7 +44,9 @@ def new_admin(username, password):
         # "password": bcrypt.hashpw(password.encode("utf-8")).decode("utf-8")
         "password": password
     }
-    adminActivityData[username] = {}
+    adminActivityData[username] = {
+        datetime.now().strftime("%Y/%m/%d-%H:%M:%S"): "user was created."
+    }
     with open(f"{ADMIN_ROOT_PATH}/data.json", "w", encoding="utf-8") as f:
         json.dump(adminData, f, ensure_ascii=False, indent=4)
     with open(f"{ADMIN_ROOT_PATH}/activity.json", "w", encoding="utf-8") as f:
@@ -148,4 +150,24 @@ def add_new_admin():
             new_activity(a, f"new admin <{username}>.")
             return render_template('done.html', data=f"new admin <{username}>.")
         return render_template("new_admin.html")
+    return redirect('/admin/login')
+
+
+@admin_bp.route('/admin/activity', methods=["GET", "POST"])
+def report_admin_activity():
+    s, a = sessionverified(session)
+    if s:
+        if request.method=="POST":
+            data = []
+            adminActivityData = json.loads(
+                open(f"{ADMIN_ROOT_PATH}/activity.json", encoding="utf-8").read()
+            )
+            username = request.form["q"]
+            userdata = adminActivityData[username]
+            if userdata:
+                for i in userdata:
+                    data.append((username, i, userdata[i]))
+                return render_template('report.html', data=data)
+            return render_template('err.html')
+        return render_template("view_admin.html")
     return redirect('/admin/login')
