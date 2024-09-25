@@ -10,7 +10,6 @@ A small-scale social media app
   - [Database](#database)
   - [API](#api)
   - [Admin](#admin)
-- [Testing Instructions](#testing-instructions)
 - [License](#license)
 
 
@@ -49,14 +48,5 @@ Each API does not interact with the database directly but uses the `services` mo
 Almost all routes are protected and require authentication headers. A JSON Web Token (JWT) is used to authenticate users. To prevent DOS attacks, the `flask-limiter` module is used as an extension.
 ### admin
 The `admin` module is a semi-independent Flask app that provides the admin direct access to query the database. It is connected to the rest of the project in the `run.py` file.
-## Testing Instructions
-To test Services you can import `/Sampader/tests/services` as follows:
-```test.py
-from tests import services
-```
-in terminal:
-```
-python test.py
-```
 ## License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
