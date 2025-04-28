@@ -1,7 +1,0 @@
-POST http://127.0.0.1:5000/api/signip
-Content-Type: application/json
-
-{
-    "USERNAME": "normalguy",
-    "PASSWORD": "1234"
-}

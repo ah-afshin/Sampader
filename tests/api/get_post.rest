@@ -1,6 +1,0 @@
-POST http://127.0.0.1:5000/api/get_post
-Content-Type: application/json
-
-{
-    "POST_ID_LST": "7a849b5a-bb94-494d-94cb-9743ccdf9588"
-}
