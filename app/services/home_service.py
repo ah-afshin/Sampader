@@ -34,6 +34,17 @@ def mix_lists_preserving_order(list1, list2) -> list:
     return [elem for _, elem in sorted(combined, key=lambda x: x[0])]
 
 
+# def mix_interleave(l1, l2):
+#     i1, i2 = 0, 0
+#     out = []
+#     while i1 < len(l1) or i2 < len(l2):
+#         if i1 < len(l1) and (i2 == len(l2) or random() < 0.5):
+#             out.append(l1[i1]); i1 += 1
+#         else:
+#             out.append(l2[i2]); i2 += 1
+#     return out
+
+
 async def homepage_feed(user_id: str) -> list[Post]:
     try:
         async with get_db() as session:
@@ -42,7 +53,7 @@ async def homepage_feed(user_id: str) -> list[Post]:
                 return []
 
             following_posts = await get_following_posts(session, user_id)
-            preferred_posts = await get_preferred_posts(session, user)
+            preferred_posts = await get_preferred_posts(user)
             return mix_lists_preserving_order(following_posts, preferred_posts)
 
     except Exception as e:

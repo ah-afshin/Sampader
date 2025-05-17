@@ -19,19 +19,6 @@ if ...:
     ...
 init_models()
 
-# run the tests
-import asyncio
-from .tests import *
-
-asyncio.run(test_signin())
-asyncio.run(test_login())
-asyncio.run(test_get_current_user())
-
-# async def t():
-#     from services import get_by_userid
-#     u = await get_by_userid("575eb3d7-209b-4292-a6b5-108218f3c787")
-#     print(u)
-# asyncio.run(t())
 
 # run the app
 

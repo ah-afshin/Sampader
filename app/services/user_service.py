@@ -94,6 +94,7 @@ async def is_user_followed(follower: str, followed: str) -> bool | None:
 
 async def block_user(blocker_id: str, blocked_id: str) -> bool:
     try:
+        await unfollow_user(blocked_id, blocked_id)
         async with get_db() as session:
             await block(session, blocker_id, blocked_id)
             return True

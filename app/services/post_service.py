@@ -22,7 +22,7 @@ async def new_post(author_id: str, text: str, parent_id=None, contents=None) -> 
     try:
         async with get_db() as session:
             # post category?
-            post = Post(author_id=author_id, text=text, parent_id=parent_id)
+            post = Post(authorID=author_id, text=text, parentID=parent_id)
             
             if contents is not None:
                 done, img_id = save_image(contents, "media")
@@ -48,7 +48,7 @@ async def new_post(author_id: str, text: str, parent_id=None, contents=None) -> 
 async def find_post(post_id: str) -> Post | None:
     try:
         async with get_db() as session:
-            return get_post(session, post_id)
+            return await get_post(session, post_id)
     except Exception as e:
         logger.error(f"services.post_service.find_post: {e}")
         return None
@@ -90,11 +90,11 @@ async def get_comments(postid: str, lim: int=None) -> list[Post]:
         return []
 
 
-async def remove_post(post_id: str) -> bool:
+async def remove_post(post_id: str, authorID: str) -> bool:
     try:
         async with get_db() as session:
             post:Post = await get_post(post_id)
-            if post_id==post.author:
+            if authorID==post.authorID:
                 await delete_post(session, post_id)
                 return True
             else:
@@ -139,7 +139,7 @@ async def is_liked(userid: str, postid: str) -> bool:
 async def get_post_likes(postid: str) -> list[User]:
     try:
         async with get_db() as session:
-            return post_likes(session, postid)
+            return await post_likes(session, postid)
     except Exception as e:
         logger.error(f"services.post_service.: {e}")
         return []

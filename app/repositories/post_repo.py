@@ -2,6 +2,7 @@ from sqlalchemy import select
 from sqlalchemy import delete
 from sqlalchemy import exists
 from sqlalchemy import func
+from sqlalchemy.orm import joinedload
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.post import Post
@@ -13,7 +14,15 @@ from core.dependencies import similarity
 
 
 async def get_post(session: AsyncSession, post_id: str) -> Post | None:
-    result = await session.execute(select(Post).where(Post.postID == post_id))
+    result = await session.execute(
+        select(Post)
+        .options(
+            joinedload(Post.author),
+            joinedload(Post.parent),
+            joinedload(Post.likes)
+        )
+        .where(Post.postID == post_id)
+    )
     return result.scalars().first()
 
 
@@ -68,6 +77,9 @@ async def users_posts(session: AsyncSession, userid: str, lim: int|None) -> list
     query = select(Post).where(
             (Post.authorID == userid) &
             (Post.parentID == None)
+        ).options(
+            joinedload(Post.author),
+            joinedload(Post.likes)
         ).order_by(Post.date.desc())
     if lim:
         query = query.limit(lim)

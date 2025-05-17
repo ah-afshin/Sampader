@@ -43,7 +43,8 @@ class Post(Base):
     )
 
     author: Mapped["User"] = relationship(
-        back_populates="posts"
+        back_populates="posts",
+        lazy="joined"
     )
     parent: Mapped["Post"] = relationship(
         remote_side=[postID]
@@ -52,6 +53,6 @@ class Post(Base):
         secondary=likes_table,
         back_populates="likes"
     )
-
+        
     def __repr__(self):
         return f"<Post '{self.text[:6]}...' by {self.author.username}>"
